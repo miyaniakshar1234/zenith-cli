@@ -25,7 +25,7 @@ pub fn draw_quit_modal(f: &mut Frame, app: &App) {
 
     let inner = block.inner(area);
 
-    let text = vec![
+    let text = [
         Span::raw("\n"),
         Span::styled(
             "Are you sure you want to quit?",

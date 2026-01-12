@@ -26,7 +26,7 @@ pub fn draw(f: &mut Frame, app: &App, area: Rect) {
         .split(area);
 
     // Banner (ZENITH ASCII)
-    let banner_text = vec![
+    let banner_text = [
         "███████╗███████╗███╗   ██╗██╗████████╗██╗  ██╗",
         "╚══███╔╝██╔════╝████╗  ██║██║╚══██╔══╝██║  ██║",
         "  ███╔╝ █████╗  ██╔██╗ ██║██║   ██║   ███████║",
@@ -56,7 +56,7 @@ pub fn draw(f: &mut Frame, app: &App, area: Rect) {
     f.render_widget(subtitle, chunks[2]);
 
     // Info / Credits
-    let info_text = vec![
+    let info_text = [
         Line::from(vec![
             Span::styled("Version: ", Style::default().fg(theme.dimmed)),
             Span::styled("1.1.0 (Power User)", Style::default().fg(theme.fg)),
@@ -76,7 +76,7 @@ pub fn draw(f: &mut Frame, app: &App, area: Rect) {
         ]),
     ];
 
-    let info = Paragraph::new(info_text).alignment(Alignment::Center);
+    let info = Paragraph::new(info_text.to_vec()).alignment(Alignment::Center);
     f.render_widget(info, chunks[3]);
 
     // Prompt
