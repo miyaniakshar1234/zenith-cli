@@ -1,6 +1,6 @@
 # Zenith CLI Task Manager v1.1.0 🚀
 
-![Build Status](https://img.shields.io/github/actions/workflow/status/miyaniakshar1234/zenith-cli/release.yml?style=flat-square&label=Build)
+![Build Status](https://img.shields.io/github/actions/workflow/status/miyaniakshar1234/zenith-cli/release.yml?style=flat-square&label=Release%20Build)
 ![License](https://img.shields.io/badge/license-MIT-blue?style=flat-square)
 ![Crates.io](https://img.shields.io/crates/v/zenith-cli?style=flat-square)
 
@@ -42,6 +42,13 @@ Once published to the official registry, you can simply run:
 
 ```bash
 cargo install zenith-cli
+```
+
+## 🚀 Running the Application
+Once installed, simply type the following command in your terminal to launch Zenith:
+
+```bash
+zenith-cli
 ```
 
 ## 🎮 Controls
