@@ -24,8 +24,8 @@ jobs:
       - name: Build Linux
         run: |
           cargo build --release --target x86_64-unknown-linux-gnu
-          mkdir -p npm/dist/linux-amd64
-          cp target/x86_64-unknown-linux-gnu/release/zenith-cli npm/dist/linux-amd64/
+          mkdir -p npm/binaries/linux-amd64
+          cp target/x86_64-unknown-linux-gnu/release/zenith-cli npm/binaries/linux-amd64/
 
       # Windows (Cross-compile)
       - name: Build Windows
@@ -33,13 +33,17 @@ jobs:
           sudo apt-get install -y mingw-w64
           rustup target add x86_64-pc-windows-gnu
           cargo build --release --target x86_64-pc-windows-gnu
-          mkdir -p npm/dist/windows-amd64
-          cp target/x86_64-pc-windows-gnu/release/zenith-cli.exe npm/dist/windows-amd64/
+          mkdir -p npm/binaries/windows-amd64
+          cp target/x86_64-pc-windows-gnu/release/zenith-cli.exe npm/binaries/windows-amd64/
 
-      # Mac (Skip cross-compile complexity, maybe just use Linux artifact or skip for now)
-      # Cross-compiling Mac from Linux is hard. We will skip bundling Mac for now in NPM wrapper 
-      # or rely on downloading from GitHub Releases in install.js script (fallback).
-      
+      # Build TypeScript
+      - name: Build Wrapper
+        run: |
+          cd npm
+          npm install
+          npm run build
+
+      # Publish
       - name: Publish to NPM
         run: |
           cd npm

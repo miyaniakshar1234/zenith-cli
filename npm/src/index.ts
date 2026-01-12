@@ -1,12 +1,11 @@
 #!/usr/bin/env node
-
-const { spawn } = require('child_process');
-const path = require('path');
-const os = require('os');
+import { spawn } from 'child_process';
+import * as path from 'path';
+import * as os from 'os';
 
 // Detect Platform
-const platform = os.platform(); // 'win32', 'linux', 'darwin'
-const arch = os.arch(); // 'x64', 'arm64'
+const platform = os.platform();
+const arch = os.arch();
 
 // Map to binary name
 let binaryName = 'zenith-cli';
@@ -14,7 +13,7 @@ if (platform === 'win32') {
   binaryName += '.exe';
 }
 
-// Locate binary in dist folder (we will bundle them here)
+// Locate binary in binaries folder (populated by CI)
 let targetDir = '';
 
 if (platform === 'win32') {
@@ -28,25 +27,24 @@ if (platform === 'win32') {
   process.exit(1);
 }
 
-// Check if we are running from npx/global install (bundled) or dev
-// In bundled mode, binary is in ../dist
-// We might need to download it if not bundled? 
-// For now, assume bundled via GitHub Action.
-
-const binaryPath = path.join(__dirname, '..', 'dist', targetDir, binaryName);
+// Path structure:
+// package_root/
+//   dist/index.js
+//   binaries/linux-amd64/zenith-cli
+const binaryPath = path.join(__dirname, '..', 'binaries', targetDir, binaryName);
 
 const child = spawn(binaryPath, process.argv.slice(2), {
   stdio: 'inherit',
   windowsHide: true
 });
 
-child.on('close', (code) => {
+child.on('close', (code: number) => {
   process.exit(code);
 });
 
-child.on('error', (err) => {
+child.on('error', (err: Error) => {
   console.error('Failed to start Zenith CLI:', err);
   console.error('Binary path tried:', binaryPath);
-  console.error('Ensure you installed via npm/npx or built the dist folder.');
+  console.error('Ensure the package was installed correctly.');
   process.exit(1);
 });

@@ -3,12 +3,19 @@
   "version": "1.2.0",
   "description": "Industrial-grade Terminal Task Manager (Rust)",
   "bin": {
-    "zenith-cli": "bin/index.js"
+    "zenith-cli": "dist/index.js"
   },
   "files": [
-    "bin",
-    "dist"
+    "dist",
+    "binaries"
   ],
+  "scripts": {
+    "build": "tsc"
+  },
+  "devDependencies": {
+    "@types/node": "^20.11.0",
+    "typescript": "^5.3.3"
+  },
   "os": [
     "win32",
     "darwin",
@@ -23,8 +30,5 @@
     "url": "git+https://github.com/miyaniakshar1234/zenith-cli.git"
   },
   "author": "Miyani Akshar",
-  "license": "MIT",
-  "scripts": {
-    "postinstall": "node bin/install.js"
-  }
+  "license": "MIT"
 }
