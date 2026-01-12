@@ -27,29 +27,37 @@
 - [x] **RPG System**: Level up as you complete tasks.
 - [x] **Theme Switcher**: Press `T` to toggle themes (Horizon, Nebula, Nord, Cyberpunk).
 
-## 📦 Installation via Terminal
+## 📦 Installation
 
-### Method 1: The "Hacker" Way (Recommended)
-You can install Zenith directly from the source code with one command. This works on Windows, Mac, and Linux.
+### Method 1: Direct Download (No Rust Required) 🌟
+The easiest way to get started. No coding knowledge needed.
 
-```bash
-cargo install --git https://github.com/miyaniakshar1234/zenith-cli
-```
-*Prerequisite: You need to have Rust installed (`curl --proto '=https' --tlsv1.2 -sSf https://sh.rustup.rs | sh`)*
+1.  Go to the **[Releases Page](https://github.com/miyaniakshar1234/zenith-cli/releases)**.
+2.  Download the file for your system:
+    - **Windows**: `zenith-cli-windows-amd64.exe`
+    - **Mac**: `zenith-cli-macos-amd64`
+    - **Linux**: `zenith-cli-linux-amd64`
+3.  **Run it!**
+    - Windows: Double-click the `.exe` or run from PowerShell.
+    - Mac/Linux: Open terminal, `chmod +x zenith-cli`, then `./zenith-cli`.
 
-### Method 2: From Crates.io (If Published)
-Once published to the official registry, you can simply run:
+### Method 2: Via Terminal (For Developers)
+If you have Rust/Cargo installed:
 
 ```bash
 cargo install zenith-cli
 ```
+*Or build from source:*
+```bash
+cargo install --git https://github.com/miyaniakshar1234/zenith-cli
+```
 
 ## 🚀 Running the Application
-Once installed, simply type the following command in your terminal to launch Zenith:
-
+Once installed via Cargo, simply type:
 ```bash
 zenith-cli
 ```
+If you downloaded the binary, navigate to your download folder and run it directly (`.\zenith-cli.exe`).
 
 ## 🎮 Controls
 
