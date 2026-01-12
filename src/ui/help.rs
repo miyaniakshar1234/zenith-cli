@@ -1,4 +1,4 @@
-use crate::app::{App, InputMode};
+use crate::app::{App, CurrentView, InputMode};
 use crate::ui::theme::HORIZON;
 use ratatui::{
     layout::{Constraint, Direction, Layout, Rect},
@@ -13,7 +13,7 @@ pub fn draw(f: &mut Frame, app: &mut App) {
         f.render_widget(Clear, area);
 
         let block = Block::default()
-            .title(" KEYBINDINGS ")
+            .title(" COMMAND PALETTE ")
             .borders(Borders::ALL)
             .border_type(BorderType::Rounded)
             .style(Style::default().bg(HORIZON.surface).fg(HORIZON.fg))
@@ -23,22 +23,38 @@ pub fn draw(f: &mut Frame, app: &mut App) {
 
         let inner = block.inner(area);
 
-        let rows = vec![
+        // Context-aware help
+        let mut rows = vec![
             Row::new(vec!["Global", "TAB", "Switch View"]),
             Row::new(vec!["Global", "?", "Toggle Help"]),
             Row::new(vec!["Global", "q", "Quit"]),
-            Row::new(vec![
-                "Dashboard",
-                "n",
-                "New Task (Type !h/!m/!l for priority)",
-            ]),
-            Row::new(vec!["Dashboard", "e", "Edit Task"]),
-            Row::new(vec!["Dashboard", "d", "Delete Task"]),
-            Row::new(vec!["Dashboard", "SPACE", "Toggle Status"]),
-            Row::new(vec!["Dashboard", "/", "Search"]),
-            Row::new(vec!["Kanban", "h/l", "Move Column"]),
-            Row::new(vec!["Focus", "t", "Toggle Timer"]),
         ];
+
+        match app.current_view {
+            CurrentView::Dashboard => {
+                rows.extend(vec![
+                    Row::new(vec!["Dashboard", "n", "New Task (!h/!m/!l for priority)"]),
+                    Row::new(vec!["Dashboard", "e", "Edit Selected Task"]),
+                    Row::new(vec!["Dashboard", "d", "Delete Selected Task"]),
+                    Row::new(vec!["Dashboard", "SPACE", "Toggle Status"]),
+                    Row::new(vec!["Dashboard", "/", "Search Mode"]),
+                    Row::new(vec!["Dashboard", "j/k", "Navigate List"]),
+                ]);
+            }
+            CurrentView::Kanban => {
+                rows.extend(vec![
+                    Row::new(vec!["Kanban", "h/l", "Switch Column"]),
+                    Row::new(vec!["Kanban", "j/k", "Navigate Tasks"]),
+                ]);
+            }
+            CurrentView::Focus => {
+                rows.extend(vec![
+                    Row::new(vec!["Focus", "t", "Start/Pause Timer"]),
+                    Row::new(vec!["Focus", "r", "Reset Timer"]),
+                ]);
+            }
+            CurrentView::Analytics | CurrentView::Splash => {}
+        }
 
         let table = Table::new(
             rows,
