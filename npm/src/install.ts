@@ -30,7 +30,7 @@ function getTarget(): { dir: string, asset: string, exec: string } {
 
 function downloadFile(url: string, dest: string): Promise<void> {
     return new Promise((resolve, reject) => {
-        const request = https.get(url, (response) => {
+        const request = https.get(url, { timeout: 15000 }, (response) => {
             // Handle redirects
             if (response.statusCode === 302 || response.statusCode === 301) {
                 if (!response.headers.location) {
@@ -59,7 +59,13 @@ function downloadFile(url: string, dest: string): Promise<void> {
         });
 
         request.on('error', (err) => {
+            fs.unlink(dest, () => {});
             reject(err);
+        });
+
+        request.on('timeout', () => {
+            request.destroy();
+            reject(new Error("Download timed out"));
         });
     });
 }
