@@ -1,25 +1,27 @@
 use ratatui::style::Color;
 
 pub struct Theme {
-    pub primary: Color,
-    pub secondary: Color,
+    pub bg: Color,
+    pub fg: Color,
+    pub selection_bg: Color,
+    pub selection_fg: Color,
     pub accent: Color,
-    pub background: Color,
+    pub border: Color,
     pub success: Color,
     pub warning: Color,
     pub error: Color,
-    pub text_main: Color,
-    pub text_dim: Color,
+    pub inactive: Color,
 }
 
-pub const NEON_CYBERPUNK: Theme = Theme {
-    primary: Color::Rgb(0, 243, 255),     // Electric Cyan
-    secondary: Color::Rgb(255, 0, 255),   // Neon Magenta
-    accent: Color::Rgb(255, 238, 0),      // Cyber Yellow
-    background: Color::Rgb(10, 10, 15),   // Deep Space Dark
-    success: Color::Rgb(57, 255, 20),     // Neon Green
-    warning: Color::Rgb(255, 102, 0),     // Neon Orange
-    error: Color::Rgb(255, 0, 50),        // Neon Red
-    text_main: Color::Rgb(230, 230, 230), // Off White
-    text_dim: Color::Rgb(100, 100, 120),  // Dimmed Blue-Grey
+pub const NORD_PRO: Theme = Theme {
+    bg: Color::Rgb(46, 52, 64),            // Nord 0 (Dark Slate)
+    fg: Color::Rgb(216, 222, 233),         // Nord 4 (Snow)
+    selection_bg: Color::Rgb(76, 86, 106), // Nord 2 (Highlight)
+    selection_fg: Color::White,
+    accent: Color::Rgb(136, 192, 208),   // Nord 8 (Frost)
+    border: Color::Rgb(59, 66, 82),      // Nord 1 (Subtle Split)
+    success: Color::Rgb(163, 190, 140),  // Nord 14 (Green)
+    warning: Color::Rgb(235, 203, 139),  // Nord 13 (Yellow)
+    error: Color::Rgb(191, 97, 106),     // Nord 11 (Red)
+    inactive: Color::Rgb(100, 110, 130), // Dimmed
 };

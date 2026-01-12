@@ -1,80 +1,58 @@
 use crate::app::App;
-use crate::ui::theme::NEON_CYBERPUNK;
+use crate::ui::theme::NORD_PRO;
 use ratatui::{
     layout::{Alignment, Constraint, Direction, Layout, Rect},
     style::{Modifier, Style},
-    widgets::{Block, BorderType, Borders, Gauge, Paragraph},
+    widgets::{Block, Borders, Gauge, Paragraph},
     Frame,
 };
 
 pub fn draw(f: &mut Frame, app: &mut App, area: Rect) {
-    let chunks = Layout::default()
+    let center = Layout::default()
         .direction(Direction::Vertical)
         .constraints(
             [
-                Constraint::Percentage(20),
-                Constraint::Percentage(60),
-                Constraint::Percentage(20),
+                Constraint::Percentage(30),
+                Constraint::Percentage(40),
+                Constraint::Percentage(30),
             ]
             .as_ref(),
         )
-        .split(area);
+        .split(area)[1];
 
-    // Title
-    let title = Paragraph::new("FOCUS MODE")
-        .style(
-            Style::default()
-                .fg(NEON_CYBERPUNK.secondary)
-                .add_modifier(Modifier::BOLD),
-        )
-        .alignment(Alignment::Center)
-        .block(Block::default().borders(Borders::NONE));
-    f.render_widget(title, chunks[0]);
+    let chunks = Layout::default()
+        .direction(Direction::Vertical)
+        .constraints([Constraint::Length(4), Constraint::Length(2)].as_ref())
+        .split(center);
 
-    // Timer Logic
     let remaining = app.focus_state.remaining_sec;
-    let minutes = remaining / 60;
-    let seconds = remaining % 60;
-    let timer_text = format!("{:02}:{:02}", minutes, seconds);
+    let time_str = format!("{:02}:{:02}", remaining / 60, remaining % 60);
 
-    let timer_color = if app.focus_state.is_running {
-        NEON_CYBERPUNK.success
-    } else if remaining == 0 {
-        NEON_CYBERPUNK.error
-    } else {
-        NEON_CYBERPUNK.accent
-    };
-
-    let timer_display = Paragraph::new(timer_text)
+    let timer = Paragraph::new(time_str)
         .style(
             Style::default()
-                .fg(timer_color)
+                .fg(NORD_PRO.fg)
                 .add_modifier(Modifier::BOLD),
-        )
+        ) // Removed font size logic for now, keeping it clean
         .alignment(Alignment::Center)
         .block(
             Block::default()
                 .borders(Borders::ALL)
-                .border_type(BorderType::Thick)
-                .border_style(Style::default().fg(timer_color)),
+                .border_style(Style::default().fg(NORD_PRO.accent)),
         );
 
-    f.render_widget(timer_display, chunks[1]);
+    f.render_widget(timer, chunks[0]);
 
-    // Progress Bar
     let total = app.focus_state.duration_sec as f64;
-    let current = remaining as f64;
-    let ratio = if total > 0.0 { current / total } else { 0.0 };
+    let ratio = if total > 0.0 {
+        remaining as f64 / total
+    } else {
+        0.0
+    };
 
     let gauge = Gauge::default()
-        .block(
-            Block::default()
-                .borders(Borders::ALL)
-                .border_type(BorderType::Rounded)
-                .title("Session Progress"),
-        )
-        .gauge_style(Style::default().fg(NEON_CYBERPUNK.primary))
-        .ratio(ratio.clamp(0.0, 1.0));
+        .gauge_style(Style::default().fg(NORD_PRO.accent))
+        .ratio(ratio);
 
-    f.render_widget(gauge, chunks[2]);
+    f.render_widget(gauge, chunks[1]);
 }
