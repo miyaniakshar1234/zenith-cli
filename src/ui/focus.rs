@@ -1,8 +1,9 @@
 use crate::app::App;
+use crate::ui::theme::NEON_CYBERPUNK;
 use ratatui::{
     layout::{Alignment, Constraint, Direction, Layout, Rect},
-    style::{Color, Modifier, Style},
-    widgets::{Block, Borders, Gauge, Paragraph},
+    style::{Modifier, Style},
+    widgets::{Block, BorderType, Borders, Gauge, Paragraph},
     Frame,
 };
 
@@ -23,7 +24,7 @@ pub fn draw(f: &mut Frame, app: &mut App, area: Rect) {
     let title = Paragraph::new("FOCUS MODE")
         .style(
             Style::default()
-                .fg(Color::Magenta)
+                .fg(NEON_CYBERPUNK.secondary)
                 .add_modifier(Modifier::BOLD),
         )
         .alignment(Alignment::Center)
@@ -36,19 +37,27 @@ pub fn draw(f: &mut Frame, app: &mut App, area: Rect) {
     let seconds = remaining % 60;
     let timer_text = format!("{:02}:{:02}", minutes, seconds);
 
-    // We could use tui-big-text here if imported, but standard text is safe for now
+    let timer_color = if app.focus_state.is_running {
+        NEON_CYBERPUNK.success
+    } else if remaining == 0 {
+        NEON_CYBERPUNK.error
+    } else {
+        NEON_CYBERPUNK.accent
+    };
+
     let timer_display = Paragraph::new(timer_text)
         .style(
             Style::default()
-                .fg(if app.focus_state.is_running {
-                    Color::Green
-                } else {
-                    Color::Yellow
-                })
+                .fg(timer_color)
                 .add_modifier(Modifier::BOLD),
         )
         .alignment(Alignment::Center)
-        .block(Block::default().borders(Borders::ALL));
+        .block(
+            Block::default()
+                .borders(Borders::ALL)
+                .border_type(BorderType::Thick)
+                .border_style(Style::default().fg(timer_color)),
+        );
 
     f.render_widget(timer_display, chunks[1]);
 
@@ -61,9 +70,10 @@ pub fn draw(f: &mut Frame, app: &mut App, area: Rect) {
         .block(
             Block::default()
                 .borders(Borders::ALL)
+                .border_type(BorderType::Rounded)
                 .title("Session Progress"),
         )
-        .gauge_style(Style::default().fg(Color::Cyan))
+        .gauge_style(Style::default().fg(NEON_CYBERPUNK.primary))
         .ratio(ratio.clamp(0.0, 1.0));
 
     f.render_widget(gauge, chunks[2]);

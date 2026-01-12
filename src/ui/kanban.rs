@@ -1,10 +1,11 @@
 use crate::app::App;
 use crate::db::models::TaskStatus;
+use crate::ui::theme::NEON_CYBERPUNK;
 use ratatui::{
     layout::{Constraint, Direction, Layout, Rect},
-    style::{Color, Modifier, Style},
+    style::{Modifier, Style},
     text::{Line, Span},
-    widgets::{Block, Borders, List, ListItem},
+    widgets::{Block, BorderType, Borders, List, ListItem},
     Frame,
 };
 
@@ -42,26 +43,32 @@ fn draw_column(
         .collect();
 
     let is_focused = app.kanban_state.focused_col == col_index;
-    let border_style = if is_focused {
-        Style::default().fg(Color::Cyan)
+
+    let border_color = if is_focused {
+        NEON_CYBERPUNK.accent
     } else {
-        Style::default().fg(Color::DarkGray)
+        NEON_CYBERPUNK.text_dim
     };
 
     let list = List::new(tasks)
         .block(
             Block::default()
                 .borders(Borders::ALL)
+                .border_type(if is_focused {
+                    BorderType::Double
+                } else {
+                    BorderType::Rounded
+                })
                 .title(title)
-                .border_style(border_style),
+                .border_style(Style::default().fg(border_color)),
         )
         .highlight_style(
             Style::default()
-                .bg(Color::Cyan)
-                .fg(Color::Black)
+                .bg(NEON_CYBERPUNK.secondary)
+                .fg(NEON_CYBERPUNK.background)
                 .add_modifier(Modifier::BOLD),
         )
-        .highlight_symbol("> ");
+        .highlight_symbol("➤ ");
 
     // We need to pass the correct ListState based on column
     match col_index {

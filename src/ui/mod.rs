@@ -1,15 +1,17 @@
 use crate::app::{App, CurrentView, InputMode};
+use crate::ui::theme::NEON_CYBERPUNK;
 use ratatui::{
     layout::{Constraint, Direction, Layout, Rect},
-    style::{Color, Modifier, Style},
+    style::{Modifier, Style},
     text::{Line, Span},
-    widgets::{Block, Borders, Gauge, Paragraph, Tabs},
+    widgets::{Block, BorderType, Borders, Clear, Gauge, Paragraph, Tabs},
     Frame,
 };
 
 mod dashboard;
 mod focus;
 mod kanban;
+pub mod theme;
 
 pub fn draw(f: &mut Frame, app: &mut App) {
     let chunks = Layout::default()
@@ -20,11 +22,15 @@ pub fn draw(f: &mut Frame, app: &mut App) {
                 Constraint::Length(3), // Header
                 Constraint::Length(3), // Tabs
                 Constraint::Min(0),    // Content
-                Constraint::Length(3), // Footer
+                Constraint::Length(1), // Footer (Minimal)
             ]
             .as_ref(),
         )
         .split(f.area());
+
+    // Background coloring (optional, if terminal supports it)
+    let bg_block = Block::default().style(Style::default().bg(NEON_CYBERPUNK.background));
+    f.render_widget(bg_block, f.area());
 
     draw_header(f, app, chunks[0]);
     draw_tabs(f, app, chunks[1]);
@@ -37,6 +43,11 @@ pub fn draw(f: &mut Frame, app: &mut App) {
     }
 
     draw_footer(f, app, chunks[3]);
+
+    // DRAW MODAL IF EDITING
+    if app.input_mode == InputMode::Editing {
+        draw_input_modal(f, app);
+    }
 }
 
 fn draw_header(f: &mut Frame, app: &App, area: Rect) {
@@ -49,16 +60,21 @@ fn draw_header(f: &mut Frame, app: &App, area: Rect) {
         Span::styled(
             "ZENITH",
             Style::default()
-                .fg(Color::Cyan)
+                .fg(NEON_CYBERPUNK.primary)
                 .add_modifier(Modifier::BOLD),
         ),
         Span::raw(" | "),
         Span::styled(
             "Cyberpunk Task Manager",
-            Style::default().fg(Color::Magenta),
+            Style::default().fg(NEON_CYBERPUNK.secondary),
         ),
     ])])
-    .block(Block::default().borders(Borders::ALL));
+    .block(
+        Block::default()
+            .borders(Borders::ALL)
+            .border_type(BorderType::Rounded)
+            .border_style(Style::default().fg(NEON_CYBERPUNK.text_dim)),
+    );
 
     f.render_widget(title, chunks[0]);
 
@@ -71,8 +87,14 @@ fn draw_header(f: &mut Frame, app: &App, area: Rect) {
     let ratio = profile.current_xp as f64 / profile.next_level_xp as f64;
 
     let gauge = Gauge::default()
-        .block(Block::default().borders(Borders::ALL).title("User Stats"))
-        .gauge_style(Style::default().fg(Color::Green))
+        .block(
+            Block::default()
+                .borders(Borders::ALL)
+                .border_type(BorderType::Rounded)
+                .title("User Stats")
+                .border_style(Style::default().fg(NEON_CYBERPUNK.text_dim)),
+        )
+        .gauge_style(Style::default().fg(NEON_CYBERPUNK.success))
         .ratio(ratio.clamp(0.0, 1.0))
         .label(label);
 
@@ -82,10 +104,15 @@ fn draw_header(f: &mut Frame, app: &App, area: Rect) {
 fn draw_tabs(f: &mut Frame, app: &App, area: Rect) {
     let titles = vec!["Dashboard", "Kanban", "Focus"];
     let tabs = Tabs::new(titles)
-        .block(Block::default().borders(Borders::ALL).title("Views"))
+        .block(
+            Block::default()
+                .borders(Borders::ALL)
+                .border_type(BorderType::Rounded)
+                .border_style(Style::default().fg(NEON_CYBERPUNK.text_dim)),
+        )
         .highlight_style(
             Style::default()
-                .fg(Color::Yellow)
+                .fg(NEON_CYBERPUNK.accent)
                 .add_modifier(Modifier::BOLD),
         )
         .select(match app.current_view {
@@ -96,33 +123,70 @@ fn draw_tabs(f: &mut Frame, app: &App, area: Rect) {
     f.render_widget(tabs, area);
 }
 
-fn draw_footer(f: &mut Frame, app: &mut App, area: Rect) {
-    let input_block = Block::default().borders(Borders::ALL).title("Input");
+fn draw_footer(f: &mut Frame, app: &App, area: Rect) {
+    let help_text = match app.current_view {
+        CurrentView::Kanban => "TAB: Switch View | h/l: Change Col | j/k: Nav | n: New Task",
+        CurrentView::Focus => "TAB: Switch View | t: Toggle Timer | r: Reset",
+        _ => "TAB: Switch View | n: New Task | SPC: Toggle | d: Delete | j/k: Nav",
+    };
 
-    match app.input_mode {
-        InputMode::Normal => {
-            let help_text = match app.current_view {
-                CurrentView::Kanban => {
-                    "TAB: Switch View | h/l: Change Col | j/k: Nav | n: New Task"
-                }
-                CurrentView::Focus => "TAB: Switch View | t: Toggle Timer | r: Reset",
-                _ => "TAB: Switch View | n: New Task | SPC: Toggle | d: Delete | j/k: Nav",
-            };
+    let p = Paragraph::new(help_text)
+        .style(Style::default().fg(NEON_CYBERPUNK.text_dim))
+        .centered();
+    f.render_widget(p, area);
+}
 
-            let p = Paragraph::new(help_text)
-                .style(Style::default().fg(Color::Gray))
-                .block(input_block);
-            f.render_widget(p, area);
-        }
-        InputMode::Editing => {
-            // RENDER TUI-TEXTAREA
-            app.textarea.set_block(
-                Block::default()
-                    .borders(Borders::ALL)
-                    .title("Create New Task (Enter to Save, Esc to Cancel)")
-                    .style(Style::default().fg(Color::Yellow)),
-            );
-            f.render_widget(&app.textarea, area);
-        }
-    }
+fn draw_input_modal(f: &mut Frame, app: &mut App) {
+    let area = centered_rect(60, 25, f.area()); // 60% width, 25% height
+
+    // Clear area so it sits on top
+    f.render_widget(Clear, area);
+
+    // Modal styling
+    app.textarea.set_block(
+        Block::default()
+            .borders(Borders::ALL)
+            .border_type(BorderType::Double) // Fancy double border for modal
+            .border_style(Style::default().fg(NEON_CYBERPUNK.accent))
+            .title(" NEW TASK ")
+            .title_style(
+                Style::default()
+                    .fg(NEON_CYBERPUNK.primary)
+                    .add_modifier(Modifier::BOLD),
+            ),
+    );
+
+    app.textarea
+        .set_style(Style::default().fg(NEON_CYBERPUNK.text_main));
+    app.textarea
+        .set_cursor_style(Style::default().bg(NEON_CYBERPUNK.secondary));
+
+    f.render_widget(&app.textarea, area);
+}
+
+/// Helper function to center a rect in another rect
+fn centered_rect(percent_x: u16, percent_y: u16, r: Rect) -> Rect {
+    let popup_layout = Layout::default()
+        .direction(Direction::Vertical)
+        .constraints(
+            [
+                Constraint::Percentage((100 - percent_y) / 2),
+                Constraint::Percentage(percent_y),
+                Constraint::Percentage((100 - percent_y) / 2),
+            ]
+            .as_ref(),
+        )
+        .split(r);
+
+    Layout::default()
+        .direction(Direction::Horizontal)
+        .constraints(
+            [
+                Constraint::Percentage((100 - percent_x) / 2),
+                Constraint::Percentage(percent_x),
+                Constraint::Percentage((100 - percent_x) / 2),
+            ]
+            .as_ref(),
+        )
+        .split(popup_layout[1])[1]
 }
