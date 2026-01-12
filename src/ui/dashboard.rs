@@ -57,13 +57,19 @@ fn draw_table(f: &mut Frame, app: &mut App, area: Rect) {
             // Priority Indicator
             let priority_marker = match task.priority {
                 TaskPriority::High => " 🔴",
-                TaskPriority::Medium => "", // Clean for default
+                TaskPriority::Medium => "",
                 TaskPriority::Low => " 🔵",
             };
 
+            let due_str = task
+                .due_date
+                .map(|d| d.format(" %b %d").to_string())
+                .unwrap_or_default();
+
             Row::new(vec![
                 Cell::from(format!("  {} ", icon)).style(Style::default().fg(color)),
-                Cell::from(format!("{}{}", task.title, priority_marker)).style(title_style),
+                Cell::from(format!("{}{}{}", task.title, priority_marker, due_str))
+                    .style(title_style),
                 Cell::from(format!("{} XP", task.xp_reward))
                     .style(Style::default().fg(HORIZON.secondary)),
             ])
@@ -182,10 +188,15 @@ fn draw_preview(f: &mut Frame, app: &App, area: Rect) {
     f.render_widget(title, chunks[1]);
 
     // 3. Metadata
+    let due_str = task
+        .due_date
+        .map(|d| d.format(" • Due: %Y-%m-%d").to_string())
+        .unwrap_or_default();
     let meta_text = format!(
-        "Reward: {} XP  •  Created: {}",
+        "Reward: {} XP  •  Created: {}{}",
         task.xp_reward,
-        task.created_at.format("%b %d")
+        task.created_at.format("%b %d"),
+        due_str
     );
     let meta = Paragraph::new(meta_text).style(Style::default().fg(HORIZON.dimmed));
     f.render_widget(meta, chunks[2]);

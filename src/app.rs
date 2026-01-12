@@ -28,6 +28,7 @@ pub enum FormField {
     Title,
     Priority,
     XP,
+    DueDate,
     Description,
 }
 
@@ -36,6 +37,7 @@ pub struct TaskForm<'a> {
     pub description: TextArea<'a>,
     pub priority: TaskPriority,
     pub xp: TextArea<'a>,
+    pub due_date: TextArea<'a>,
     pub active_field: FormField,
 }
 
@@ -51,11 +53,15 @@ impl<'a> Default for TaskForm<'a> {
         xp.set_placeholder_text("10");
         xp.insert_str("10");
 
+        let mut due_date = TextArea::default();
+        due_date.set_placeholder_text("YYYY-MM-DD");
+
         Self {
             title,
             description,
             priority: TaskPriority::Medium,
             xp,
+            due_date,
             active_field: FormField::Title,
         }
     }
@@ -106,7 +112,7 @@ pub struct App<'a> {
     pub tasks: Vec<Task>,
     pub user_profile: UserProfile,
     pub input_mode: InputMode,
-    pub task_form: TaskForm<'a>, // Replaced single textarea
+    pub task_form: TaskForm<'a>,
     pub table_state: TableState,
     pub current_view: CurrentView,
     pub focus_state: FocusState,
@@ -177,7 +183,6 @@ impl<'a> App<'a> {
     }
 
     pub fn save_task(&mut self) -> Result<()> {
-        // Validate Title
         if self.task_form.title.lines().join("").trim().is_empty() {
             return Ok(());
         }
@@ -194,15 +199,28 @@ impl<'a> App<'a> {
         let xp_str = self.task_form.xp.lines().join("").trim().to_string();
         let xp_reward = xp_str.parse::<i32>().unwrap_or(10);
 
+        let due_date_str = self.task_form.due_date.lines().join("").trim().to_string();
+        let due_date = if due_date_str.is_empty() {
+            None
+        } else {
+            if let Ok(naive) = chrono::NaiveDate::parse_from_str(&due_date_str, "%Y-%m-%d") {
+                Some(DateTime::from_naive_utc_and_offset(
+                    naive.and_hms_opt(23, 59, 59).unwrap(),
+                    Utc,
+                ))
+            } else {
+                None
+            }
+        };
+
         if let Some(id) = &self.editing_task_id {
             self.db
-                .update_task_content(id, &title, &description, priority)?;
+                .update_task_content(id, &title, &description, priority, due_date)?;
         } else {
-            let task = Task::new(title, description, priority, xp_reward);
+            let task = Task::new(title, description, priority, xp_reward, due_date);
             self.db.create_task(&task)?;
         }
 
-        // Reset
         self.editing_task_id = None;
         self.task_form = TaskForm::default();
         self.refresh_state()?;
@@ -218,14 +236,19 @@ impl<'a> App<'a> {
             if let Some(task) = self.tasks.get(i) {
                 self.editing_task_id = Some(task.id.clone());
 
-                // Populate Form
                 self.task_form.title = TextArea::new(vec![task.title.clone()]);
                 self.task_form.description =
                     TextArea::new(task.description.lines().map(|s| s.to_string()).collect());
                 self.task_form.priority = task.priority;
                 self.task_form.xp = TextArea::new(vec![task.xp_reward.to_string()]);
-                self.task_form.active_field = FormField::Title;
 
+                let due_str = task
+                    .due_date
+                    .map(|d| d.format("%Y-%m-%d").to_string())
+                    .unwrap_or_default();
+                self.task_form.due_date = TextArea::new(vec![due_str]);
+
+                self.task_form.active_field = FormField::Title;
                 self.input_mode = InputMode::Editing;
             }
         }

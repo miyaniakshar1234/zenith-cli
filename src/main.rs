@@ -124,7 +124,8 @@ fn run_app<B: ratatui::backend::Backend>(
                             app.task_form.active_field = match app.task_form.active_field {
                                 FormField::Title => FormField::Priority,
                                 FormField::Priority => FormField::XP,
-                                FormField::XP => FormField::Description,
+                                FormField::XP => FormField::DueDate,
+                                FormField::DueDate => FormField::Description,
                                 FormField::Description => FormField::Title,
                             };
                         }
@@ -133,7 +134,8 @@ fn run_app<B: ratatui::backend::Backend>(
                                 FormField::Title => FormField::Description,
                                 FormField::Priority => FormField::Title,
                                 FormField::XP => FormField::Priority,
-                                FormField::Description => FormField::XP,
+                                FormField::DueDate => FormField::XP,
+                                FormField::Description => FormField::DueDate,
                             };
                         }
                         // Priority Handling
@@ -188,6 +190,9 @@ fn run_app<B: ratatui::backend::Backend>(
                                     {
                                         app.task_form.xp.input(key);
                                     }
+                                }
+                                FormField::DueDate => {
+                                    app.task_form.due_date.input(key);
                                 }
                                 FormField::Priority => {} // Handled above
                             }

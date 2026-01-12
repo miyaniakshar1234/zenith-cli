@@ -26,27 +26,42 @@ impl Database {
                 status TEXT DEFAULT 'TODO',
                 priority TEXT DEFAULT 'MEDIUM',
                 xp_reward INTEGER DEFAULT 10,
+                due_date TEXT,
                 created_at TEXT NOT NULL,
                 completed_at TEXT
             )",
             [],
         )?;
 
-        // Migration logic
-        let needs_migration = {
+        // Migration: Add priority if missing
+        let has_priority = {
             let mut stmt = conn.prepare("PRAGMA table_info(tasks)")?;
             let columns: Vec<String> = stmt
                 .query_map([], |row| row.get(1))?
                 .filter_map(|r| r.ok())
                 .collect();
-            !columns.contains(&"priority".to_string())
+            columns.contains(&"priority".to_string())
         };
 
-        if needs_migration {
+        if !has_priority {
             conn.execute(
                 "ALTER TABLE tasks ADD COLUMN priority TEXT DEFAULT 'MEDIUM'",
                 [],
             )?;
+        }
+
+        // Migration: Add due_date if missing
+        let has_due_date = {
+            let mut stmt = conn.prepare("PRAGMA table_info(tasks)")?;
+            let columns: Vec<String> = stmt
+                .query_map([], |row| row.get(1))?
+                .filter_map(|r| r.ok())
+                .collect();
+            columns.contains(&"due_date".to_string())
+        };
+
+        if !has_due_date {
+            conn.execute("ALTER TABLE tasks ADD COLUMN due_date TEXT", [])?;
         }
 
         conn.execute(
@@ -75,15 +90,14 @@ impl Database {
             }
             Ok(data_dir.join("zenith.db"))
         } else {
-            // Fallback to local directory
             Ok(PathBuf::from("zenith.db"))
         }
     }
 
     pub fn create_task(&self, task: &Task) -> Result<()> {
         self.conn.execute(
-            "INSERT INTO tasks (id, title, description, status, priority, xp_reward, created_at) 
-             VALUES (?1, ?2, ?3, ?4, ?5, ?6, ?7)",
+            "INSERT INTO tasks (id, title, description, status, priority, xp_reward, due_date, created_at) 
+             VALUES (?1, ?2, ?3, ?4, ?5, ?6, ?7, ?8)",
             params![
                 task.id,
                 task.title,
@@ -91,6 +105,7 @@ impl Database {
                 task.status,
                 task.priority,
                 task.xp_reward,
+                task.due_date.map(|d| d.to_rfc3339()),
                 task.created_at.to_rfc3339()
             ],
         )?;
@@ -99,12 +114,13 @@ impl Database {
 
     pub fn get_all_tasks(&self) -> Result<Vec<Task>> {
         let mut stmt = self.conn.prepare(
-            "SELECT id, title, description, status, priority, xp_reward, created_at, completed_at FROM tasks ORDER BY created_at DESC"
+            "SELECT id, title, description, status, priority, xp_reward, due_date, created_at, completed_at FROM tasks ORDER BY created_at DESC"
         )?;
 
         let task_iter = stmt.query_map([], |row| {
-            let created_at_str: String = row.get(6)?;
-            let completed_at_str: Option<String> = row.get(7)?;
+            let due_date_str: Option<String> = row.get(6)?;
+            let created_at_str: String = row.get(7)?;
+            let completed_at_str: Option<String> = row.get(8)?;
 
             Ok(Task {
                 id: row.get(0)?,
@@ -113,6 +129,11 @@ impl Database {
                 status: row.get(3)?,
                 priority: row.get(4)?,
                 xp_reward: row.get(5)?,
+                due_date: due_date_str.map(|s| {
+                    DateTime::parse_from_rfc3339(&s)
+                        .unwrap()
+                        .with_timezone(&Utc)
+                }),
                 created_at: DateTime::parse_from_rfc3339(&created_at_str)
                     .unwrap()
                     .with_timezone(&Utc),
@@ -157,10 +178,11 @@ impl Database {
         title: &str,
         description: &str,
         priority: TaskPriority,
+        due_date: Option<DateTime<Utc>>,
     ) -> Result<()> {
         self.conn.execute(
-            "UPDATE tasks SET title = ?1, description = ?2, priority = ?3 WHERE id = ?4",
-            params![title, description, priority, id],
+            "UPDATE tasks SET title = ?1, description = ?2, priority = ?3, due_date = ?4 WHERE id = ?5",
+            params![title, description, priority, due_date.map(|d| d.to_rfc3339()), id],
         )?;
         Ok(())
     }

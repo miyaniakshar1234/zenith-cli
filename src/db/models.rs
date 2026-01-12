@@ -81,12 +81,19 @@ pub struct Task {
     pub status: TaskStatus,
     pub priority: TaskPriority,
     pub xp_reward: i32,
+    pub due_date: Option<DateTime<Utc>>,
     pub created_at: DateTime<Utc>,
     pub completed_at: Option<DateTime<Utc>>,
 }
 
 impl Task {
-    pub fn new(title: String, description: String, priority: TaskPriority, xp: i32) -> Self {
+    pub fn new(
+        title: String,
+        description: String,
+        priority: TaskPriority,
+        xp: i32,
+        due_date: Option<DateTime<Utc>>,
+    ) -> Self {
         Self {
             id: Uuid::new_v4().to_string(),
             title,
@@ -94,6 +101,7 @@ impl Task {
             status: TaskStatus::Todo,
             priority,
             xp_reward: xp,
+            due_date,
             created_at: Utc::now(),
             completed_at: None,
         }
