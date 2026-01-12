@@ -240,15 +240,13 @@ impl<'a> App<'a> {
         let due_date_str = self.task_form.due_date.lines().join("").trim().to_string();
         let due_date = if due_date_str.is_empty() {
             None
+        } else if let Ok(naive) = chrono::NaiveDate::parse_from_str(&due_date_str, "%Y-%m-%d") {
+            Some(DateTime::from_naive_utc_and_offset(
+                naive.and_hms_opt(23, 59, 59).unwrap(),
+                Utc,
+            ))
         } else {
-            if let Ok(naive) = chrono::NaiveDate::parse_from_str(&due_date_str, "%Y-%m-%d") {
-                Some(DateTime::from_naive_utc_and_offset(
-                    naive.and_hms_opt(23, 59, 59).unwrap(),
-                    Utc,
-                ))
-            } else {
-                None
-            }
+            None
         };
 
         if let Some(id) = &self.editing_task_id {

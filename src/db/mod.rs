@@ -287,7 +287,7 @@ impl Database {
             let expected = current_check.format("%Y-%m-%d").to_string();
             if day_str == expected {
                 streak += 1;
-                current_check = current_check - chrono::Duration::days(1);
+                current_check -= chrono::Duration::days(1);
             } else {
                 break;
             }

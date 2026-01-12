@@ -64,11 +64,11 @@ impl ToSql for TaskPriority {
 
 impl FromSql for TaskPriority {
     fn column_result(value: ValueRef<'_>) -> FromSqlResult<Self> {
-        String::column_result(value).and_then(|s| match s.as_str() {
-            "LOW" => Ok(TaskPriority::Low),
-            "MEDIUM" => Ok(TaskPriority::Medium),
-            "HIGH" => Ok(TaskPriority::High),
-            _ => Ok(TaskPriority::Medium), // Default fallback
+        String::column_result(value).map(|s| match s.as_str() {
+            "LOW" => TaskPriority::Low,
+            "MEDIUM" => TaskPriority::Medium,
+            "HIGH" => TaskPriority::High,
+            _ => TaskPriority::Medium, // Default fallback
         })
     }
 }
