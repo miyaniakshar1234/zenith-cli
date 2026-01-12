@@ -1,4 +1,4 @@
-# Zenith CLI Task Manager v1.0.0 🚀
+# Zenith CLI Task Manager v1.1.0 🚀
 
 ![Build Status](https://img.shields.io/github/actions/workflow/status/miyaniakshar1234/zenith-cli/ci.yml?style=flat-square&label=Build)
 ![License](https://img.shields.io/badge/license-MIT-blue?style=flat-square)
@@ -18,44 +18,46 @@
 
 ## 🚀 Features
 
-- [x] **Cyberpunk/Nord UI**: A beautiful, themeable TUI with sidebar navigation.
-- [x] **Kanban Board**: Visualize your workflow with interactive Todo / Doing / Done columns.
-- [x] **Focus Mode**: Built-in Pomodoro timer to maintain flow state.
-- [x] **Analytics**: Visual charts tracking your weekly productivity velocity.
-- [x] **RPG System**: Earn XP for every task, track your level, and gamify your life.
-- [x] **Industrial Editor**: Multi-line task descriptions with Vim-like cursor control.
-- [x] **Search & Filter**: Instant `/` search filtering.
+- [x] **Horizon UI**: A deep-space aesthetic with Master-Detail dashboard layout.
+- [x] **Task Wizard**: Structured form for Title, Description, Priority, and Rewards.
+- [x] **Smart Parsing**: Type `!h` in title for High Priority, or `> Reward: 50` in description.
+- [x] **Kanban Board**: Interactive workflow management.
+- [x] **Focus Mode**: Distraction-free Pomodoro timer.
+- [x] **Analytics**: Visual productivity velocity charts.
+- [x] **RPG System**: Level up as you complete tasks.
 
 ## 🎮 Controls
 
 ### Global
-- `TAB`: Switch between **Dashboard**, **Kanban**, **Focus**, and **Analytics** views.
-- `q`: Quit application.
+- `TAB`: Switch Views (Dashboard -> Kanban -> Focus -> Analytics).
+- `?`: Toggle **Command Palette** (Help).
+- `q` / `Ctrl+C`: Quit application.
 
 ### Dashboard View
-- `n`: Create a new task (opens Editor).
-- `e`: Edit selected task.
-- `d`: Delete selected task.
-- `SPACE`: Toggle task status (Todo -> Doing -> Done).
-- `ENTER`: **Inspect Task** (View details & full description).
-- `/`: **Search Mode** (Type to filter tasks).
-- `j` / `k`: Navigate the list.
+- `n`: **New Task Wizard**.
+- `e`: **Edit Task**.
+- `d`: Delete Task.
+- `SPACE`: Toggle Status.
+- `/`: Search.
+- `j` / `k`: Navigate.
 
-### Kanban View
-- `h` / `l`: Move focus between columns.
-- `j` / `k`: Navigate tasks within a column.
+### Task Wizard (Edit Mode)
+- `TAB`: Next Field.
+- `Shift+TAB`: Previous Field.
+- `Enter`: Save Task.
+- `Esc`: Cancel.
+- `Left`/`Right`: Change Priority (in Priority field).
 
 ### Focus View
-- `t`: Start / Pause the Pomodoro timer.
-- `r`: Reset the timer.
+- `t`: Start / Pause Timer.
+- `r`: Reset Timer.
 
 ## 🛠️ Tech Stack
 
-- **Language:** Rust 🦀
-- **UI Engine:** Ratatui + Crossterm + Tui-Textarea
-- **Database:** SQLite (Rusqlite)
-- **Error Handling:** Color-Eyre
-- **Architecture:** MVVM + Domain Driven Design
+- **Core**: Rust 🦀 + SQLite
+- **UI**: Ratatui + Crossterm
+- **Input**: Tui-Textarea
+- **Architecture**: MVVM + Domain Driven Design
 
 ## 📦 Installation
 

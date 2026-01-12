@@ -39,7 +39,7 @@ impl FromSql for TaskStatus {
     }
 }
 
-#[derive(Debug, Clone, Serialize, Deserialize, PartialEq)]
+#[derive(Debug, Clone, Copy, Serialize, Deserialize, PartialEq)]
 pub enum TaskPriority {
     Low,
     Medium,

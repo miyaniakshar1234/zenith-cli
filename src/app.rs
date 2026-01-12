@@ -23,6 +23,44 @@ pub enum CurrentView {
     Analytics,
 }
 
+#[derive(PartialEq, Clone, Copy)]
+pub enum FormField {
+    Title,
+    Priority,
+    XP,
+    Description,
+}
+
+pub struct TaskForm<'a> {
+    pub title: TextArea<'a>,
+    pub description: TextArea<'a>,
+    pub priority: TaskPriority,
+    pub xp: TextArea<'a>,
+    pub active_field: FormField,
+}
+
+impl<'a> Default for TaskForm<'a> {
+    fn default() -> Self {
+        let mut title = TextArea::default();
+        title.set_placeholder_text("Task Title...");
+
+        let mut description = TextArea::default();
+        description.set_placeholder_text("Detailed description...");
+
+        let mut xp = TextArea::default();
+        xp.set_placeholder_text("10");
+        xp.insert_str("10");
+
+        Self {
+            title,
+            description,
+            priority: TaskPriority::Medium,
+            xp,
+            active_field: FormField::Title,
+        }
+    }
+}
+
 pub struct FocusState {
     pub is_running: bool,
     pub duration_sec: i64,
@@ -34,7 +72,7 @@ impl Default for FocusState {
     fn default() -> Self {
         Self {
             is_running: false,
-            duration_sec: 25 * 60, // 25 minutes
+            duration_sec: 25 * 60,
             remaining_sec: 25 * 60,
             last_tick: None,
         }
@@ -45,7 +83,7 @@ pub struct KanbanState {
     pub todo_state: ListState,
     pub doing_state: ListState,
     pub done_state: ListState,
-    pub focused_col: usize, // 0=Todo, 1=Doing, 2=Done
+    pub focused_col: usize,
 }
 
 impl Default for KanbanState {
@@ -56,7 +94,6 @@ impl Default for KanbanState {
             done_state: ListState::default(),
             focused_col: 0,
         };
-        // Select first item by default for better UX
         s.todo_state.select(Some(0));
         s.doing_state.select(Some(0));
         s.done_state.select(Some(0));
@@ -69,7 +106,7 @@ pub struct App<'a> {
     pub tasks: Vec<Task>,
     pub user_profile: UserProfile,
     pub input_mode: InputMode,
-    pub textarea: TextArea<'a>,
+    pub task_form: TaskForm<'a>, // Replaced single textarea
     pub table_state: TableState,
     pub current_view: CurrentView,
     pub focus_state: FocusState,
@@ -93,15 +130,12 @@ impl<'a> App<'a> {
             table_state.select(Some(0));
         }
 
-        let mut textarea = TextArea::default();
-        textarea.set_placeholder_text("Title !priority\n> Reward: 50\n\nDescription...");
-
         Ok(Self {
             db,
             tasks,
             user_profile,
             input_mode: InputMode::Normal,
-            textarea,
+            task_form: TaskForm::default(),
             table_state,
             current_view: CurrentView::Splash,
             focus_state: FocusState::default(),
@@ -132,7 +166,6 @@ impl<'a> App<'a> {
         self.user_profile = self.db.get_user_profile()?;
         self.stats = self.db.get_weekly_stats()?;
 
-        // Ensure selections remain valid
         if self.table_state.selected().is_none() && !self.tasks.is_empty() {
             self.table_state.select(Some(0));
         } else if self.table_state.selected().unwrap_or(0) >= self.tasks.len() {
@@ -143,70 +176,35 @@ impl<'a> App<'a> {
         Ok(())
     }
 
-    fn parse_priority(&self, text: &str) -> (String, TaskPriority) {
-        let mut clean_text = text.to_string();
-        let mut priority = TaskPriority::Medium;
-
-        if text.contains("!h") || text.contains("!high") {
-            priority = TaskPriority::High;
-            clean_text = clean_text.replace("!h", "").replace("!high", "");
-        } else if text.contains("!l") || text.contains("!low") {
-            priority = TaskPriority::Low;
-            clean_text = clean_text.replace("!l", "").replace("!low", "");
-        } else if text.contains("!m") || text.contains("!med") {
-            priority = TaskPriority::Medium;
-            clean_text = clean_text.replace("!m", "").replace("!med", "");
-        }
-
-        (clean_text.trim().to_string(), priority)
-    }
-
     pub fn save_task(&mut self) -> Result<()> {
-        let lines = self.textarea.lines();
-        if lines.is_empty() || lines[0].trim().is_empty() {
+        // Validate Title
+        if self.task_form.title.lines().join("").trim().is_empty() {
             return Ok(());
         }
 
-        let raw_title = lines[0].trim();
-        let (title, priority) = self.parse_priority(raw_title);
-
-        let mut description = String::new();
-        let mut xp_reward = 10; // Default
-
-        // Parse body for metadata
-        if lines.len() > 1 {
-            for line in &lines[1..] {
-                let trimmed = line.trim();
-                if trimmed.starts_with("> Reward:") {
-                    if let Ok(val) = trimmed.replace("> Reward:", "").trim().parse::<i32>() {
-                        xp_reward = val;
-                    }
-                } else {
-                    description.push_str(line);
-                    description.push('\n');
-                }
-            }
-        }
-
-        let description = description.trim().to_string();
+        let title = self.task_form.title.lines().join(" ").trim().to_string();
+        let description = self
+            .task_form
+            .description
+            .lines()
+            .join("\n")
+            .trim()
+            .to_string();
+        let priority = self.task_form.priority;
+        let xp_str = self.task_form.xp.lines().join("").trim().to_string();
+        let xp_reward = xp_str.parse::<i32>().unwrap_or(10);
 
         if let Some(id) = &self.editing_task_id {
-            // Update existing (XP update not supported in update_task_content yet, let's fix that)
-            // For now, update title/desc/priority
             self.db
                 .update_task_content(id, &title, &description, priority)?;
         } else {
-            // Create new
             let task = Task::new(title, description, priority, xp_reward);
             self.db.create_task(&task)?;
         }
 
         // Reset
         self.editing_task_id = None;
-        self.textarea = TextArea::default();
-        self.textarea
-            .set_placeholder_text("Title !priority\n> Reward: 50\n\nDescription...");
-
+        self.task_form = TaskForm::default();
         self.refresh_state()?;
         Ok(())
     }
@@ -220,21 +218,14 @@ impl<'a> App<'a> {
             if let Some(task) = self.tasks.get(i) {
                 self.editing_task_id = Some(task.id.clone());
 
-                // Pre-fill text area
-                let mut text = task.title.clone();
-                // Append priority tag so user can see/edit it
-                match task.priority {
-                    TaskPriority::High => text.push_str(" !h"),
-                    TaskPriority::Low => text.push_str(" !l"),
-                    _ => {}
-                }
+                // Populate Form
+                self.task_form.title = TextArea::new(vec![task.title.clone()]);
+                self.task_form.description =
+                    TextArea::new(task.description.lines().map(|s| s.to_string()).collect());
+                self.task_form.priority = task.priority;
+                self.task_form.xp = TextArea::new(vec![task.xp_reward.to_string()]);
+                self.task_form.active_field = FormField::Title;
 
-                if !task.description.is_empty() {
-                    text.push('\n');
-                    text.push_str(&task.description);
-                }
-
-                self.textarea = TextArea::new(text.lines().map(|s| s.to_string()).collect());
                 self.input_mode = InputMode::Editing;
             }
         }
@@ -246,7 +237,6 @@ impl<'a> App<'a> {
         }
     }
 
-    // Navigation Logic
     pub fn next_item(&mut self) {
         match self.current_view {
             CurrentView::Dashboard => self.next_dashboard_task(),
@@ -297,7 +287,6 @@ impl<'a> App<'a> {
         self.table_state.select(Some(i));
     }
 
-    // Kanban Navigation
     fn next_kanban_item(&mut self) {
         let status = self.get_status_from_col(self.kanban_state.focused_col);
         let count = self.tasks.iter().filter(|t| t.status == status).count();
@@ -436,7 +425,6 @@ impl<'a> App<'a> {
         Ok(())
     }
 
-    // Focus Mode Logic
     pub fn toggle_timer(&mut self) {
         self.focus_state.is_running = !self.focus_state.is_running;
         if self.focus_state.is_running {

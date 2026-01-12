@@ -1,4 +1,5 @@
-use crate::app::{App, CurrentView, InputMode};
+use crate::app::{App, CurrentView, FormField, InputMode};
+use crate::db::models::TaskPriority;
 use crate::ui::theme::HORIZON;
 use ratatui::{
     layout::{Constraint, Direction, Layout, Rect},
@@ -18,11 +19,6 @@ mod splash;
 pub mod theme;
 
 pub fn draw(f: &mut Frame, app: &mut App) {
-    if app.current_view == CurrentView::Splash {
-        splash::draw(f, f.area());
-        return;
-    }
-
     // 1. Background
     let bg_block = Block::default().style(Style::default().bg(HORIZON.bg));
     f.render_widget(bg_block, f.area());
@@ -49,19 +45,14 @@ pub fn draw(f: &mut Frame, app: &mut App) {
         CurrentView::Kanban => kanban::draw(f, app, content_area),
         CurrentView::Focus => focus::draw(f, app, content_area),
         CurrentView::Analytics => analytics::draw(f, app, content_area),
-        CurrentView::Splash => {} // Handled early
+        CurrentView::Splash => splash::draw(f, f.area()),
     }
 
     draw_status_bar(f, app, layout[2]);
 
     // 3. Modals (Overlays)
     if app.input_mode == InputMode::Editing {
-        draw_input_modal(f, app);
-    }
-
-    // Inspector is embedded in dashboard, but if we wanted it elsewhere:
-    if app.is_inspecting && app.current_view != CurrentView::Dashboard {
-        inspector::draw(f, app);
+        draw_form_modal(f, app);
     }
 
     // Help Overlay
@@ -117,7 +108,7 @@ fn draw_header_tabs(f: &mut Frame, app: &App, area: Rect) {
             CurrentView::Kanban => 1,
             CurrentView::Focus => 2,
             CurrentView::Analytics => 3,
-            CurrentView::Splash => 0,
+            CurrentView::Splash => 0, // No tab selected usually, but mapping to 0
         });
     f.render_widget(tabs, chunks[1]);
 
@@ -144,12 +135,15 @@ fn draw_status_bar(f: &mut Frame, app: &App, area: Rect) {
         InputMode::Search => (" SEARCH ", HORIZON.warning),
     };
 
-    let hints = match app.current_view {
-        CurrentView::Dashboard => "n: New • e: Edit • d: Delete • SPC: Complete • /: Search",
-        CurrentView::Kanban => "h/l: Col • j/k: Task",
-        CurrentView::Focus => "t: Start/Stop • r: Reset",
-        CurrentView::Analytics => "Visual Stats",
-        CurrentView::Splash => "Press Any Key",
+    let hints = match app.input_mode {
+        InputMode::Editing => "TAB: Next Field • Enter: Save • Esc: Cancel",
+        _ => match app.current_view {
+            CurrentView::Dashboard => "n: New • e: Edit • d: Delete • SPC: Status • /: Search",
+            CurrentView::Kanban => "h/l: Col • j/k: Task",
+            CurrentView::Focus => "t: Timer • r: Reset",
+            CurrentView::Splash => "Press Any Key",
+            CurrentView::Analytics => "",
+        },
     };
 
     let status = Paragraph::new(Line::from(vec![
@@ -177,8 +171,8 @@ fn draw_status_bar(f: &mut Frame, app: &App, area: Rect) {
     f.render_widget(status, area);
 }
 
-fn draw_input_modal(f: &mut Frame, app: &mut App) {
-    let area = centered_rect(50, 25, f.area());
+fn draw_form_modal(f: &mut Frame, app: &mut App) {
+    let area = centered_rect(60, 60, f.area());
     f.render_widget(Clear, area);
 
     let title = if app.editing_task_id.is_some() {
@@ -187,24 +181,104 @@ fn draw_input_modal(f: &mut Frame, app: &mut App) {
         " NEW TASK "
     };
 
-    app.textarea.set_block(
+    let block = Block::default()
+        .borders(Borders::ALL)
+        .border_type(BorderType::Rounded)
+        .border_style(Style::default().fg(HORIZON.accent))
+        .title(title)
+        .title_style(
+            Style::default()
+                .fg(HORIZON.accent)
+                .add_modifier(Modifier::BOLD),
+        )
+        .style(Style::default().bg(HORIZON.surface));
+
+    f.render_widget(block.clone(), area);
+
+    let inner = block.inner(area);
+    let chunks = Layout::default()
+        .direction(Direction::Vertical)
+        .constraints(
+            [
+                Constraint::Length(3), // Title
+                Constraint::Length(3), // Priority
+                Constraint::Length(3), // XP
+                Constraint::Min(0),    // Description
+            ]
+            .as_ref(),
+        )
+        .split(inner);
+
+    // 1. Title Input
+    let title_border = if app.task_form.active_field == FormField::Title {
+        HORIZON.accent
+    } else {
+        HORIZON.dimmed
+    };
+    app.task_form.title.set_block(
         Block::default()
             .borders(Borders::ALL)
-            .border_type(BorderType::Rounded)
-            .border_style(Style::default().fg(HORIZON.accent))
-            .title(title)
-            .title_style(
-                Style::default()
-                    .fg(HORIZON.accent)
-                    .add_modifier(Modifier::BOLD),
-            )
-            .style(Style::default().bg(HORIZON.surface)),
+            .title("Title")
+            .border_style(Style::default().fg(title_border)),
     );
-    app.textarea.set_style(Style::default().fg(HORIZON.fg));
-    app.textarea
-        .set_cursor_style(Style::default().bg(HORIZON.accent).fg(HORIZON.bg));
+    app.task_form
+        .title
+        .set_style(Style::default().fg(HORIZON.fg));
+    f.render_widget(&app.task_form.title, chunks[0]);
 
-    f.render_widget(&app.textarea, area);
+    // 2. Priority Input (Selector)
+    let prio_border = if app.task_form.active_field == FormField::Priority {
+        HORIZON.accent
+    } else {
+        HORIZON.dimmed
+    };
+    let prio_text = match app.task_form.priority {
+        TaskPriority::High => "🔴 HIGH",
+        TaskPriority::Medium => "🟡 MEDIUM",
+        TaskPriority::Low => "🔵 LOW",
+    };
+    let prio_widget = Paragraph::new(prio_text)
+        .block(
+            Block::default()
+                .borders(Borders::ALL)
+                .title("Priority (< > to change)")
+                .border_style(Style::default().fg(prio_border)),
+        )
+        .alignment(ratatui::layout::Alignment::Center)
+        .style(Style::default().fg(HORIZON.fg).add_modifier(Modifier::BOLD));
+    f.render_widget(prio_widget, chunks[1]);
+
+    // 3. XP Input
+    let xp_border = if app.task_form.active_field == FormField::XP {
+        HORIZON.accent
+    } else {
+        HORIZON.dimmed
+    };
+    app.task_form.xp.set_block(
+        Block::default()
+            .borders(Borders::ALL)
+            .title("Reward (XP)")
+            .border_style(Style::default().fg(xp_border)),
+    );
+    app.task_form.xp.set_style(Style::default().fg(HORIZON.fg));
+    f.render_widget(&app.task_form.xp, chunks[2]);
+
+    // 4. Description Input
+    let desc_border = if app.task_form.active_field == FormField::Description {
+        HORIZON.accent
+    } else {
+        HORIZON.dimmed
+    };
+    app.task_form.description.set_block(
+        Block::default()
+            .borders(Borders::ALL)
+            .title("Description")
+            .border_style(Style::default().fg(desc_border)),
+    );
+    app.task_form
+        .description
+        .set_style(Style::default().fg(HORIZON.fg));
+    f.render_widget(&app.task_form.description, chunks[3]);
 }
 
 fn centered_rect(percent_x: u16, percent_y: u16, r: Rect) -> Rect {
