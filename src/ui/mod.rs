@@ -14,9 +14,15 @@ mod focus;
 mod help;
 mod inspector;
 mod kanban;
+mod splash;
 pub mod theme;
 
 pub fn draw(f: &mut Frame, app: &mut App) {
+    if app.current_view == CurrentView::Splash {
+        splash::draw(f, f.area());
+        return;
+    }
+
     // 1. Background
     let bg_block = Block::default().style(Style::default().bg(HORIZON.bg));
     f.render_widget(bg_block, f.area());
@@ -43,6 +49,7 @@ pub fn draw(f: &mut Frame, app: &mut App) {
         CurrentView::Kanban => kanban::draw(f, app, content_area),
         CurrentView::Focus => focus::draw(f, app, content_area),
         CurrentView::Analytics => analytics::draw(f, app, content_area),
+        CurrentView::Splash => {} // Handled early
     }
 
     draw_status_bar(f, app, layout[2]);
@@ -110,6 +117,7 @@ fn draw_header_tabs(f: &mut Frame, app: &App, area: Rect) {
             CurrentView::Kanban => 1,
             CurrentView::Focus => 2,
             CurrentView::Analytics => 3,
+            CurrentView::Splash => 0,
         });
     f.render_widget(tabs, chunks[1]);
 
@@ -141,6 +149,7 @@ fn draw_status_bar(f: &mut Frame, app: &App, area: Rect) {
         CurrentView::Kanban => "h/l: Col • j/k: Task",
         CurrentView::Focus => "t: Start/Stop • r: Reset",
         CurrentView::Analytics => "Visual Stats",
+        CurrentView::Splash => "Press Any Key",
     };
 
     let status = Paragraph::new(Line::from(vec![

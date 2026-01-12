@@ -16,6 +16,7 @@ pub enum InputMode {
 
 #[derive(PartialEq, Clone, Copy, Debug)]
 pub enum CurrentView {
+    Splash,
     Dashboard,
     Kanban,
     Focus,
@@ -93,7 +94,7 @@ impl<'a> App<'a> {
         }
 
         let mut textarea = TextArea::default();
-        textarea.set_placeholder_text("Title (Line 1)\nDescription (Line 2+)...");
+        textarea.set_placeholder_text("Title !priority\n> Reward: 50\n\nDescription...");
 
         Ok(Self {
             db,
@@ -102,7 +103,7 @@ impl<'a> App<'a> {
             input_mode: InputMode::Normal,
             textarea,
             table_state,
-            current_view: CurrentView::Dashboard,
+            current_view: CurrentView::Splash,
             focus_state: FocusState::default(),
             kanban_state: KanbanState::default(),
             is_inspecting: false,
@@ -169,20 +170,34 @@ impl<'a> App<'a> {
         let raw_title = lines[0].trim();
         let (title, priority) = self.parse_priority(raw_title);
 
-        let description = if lines.len() > 1 {
-            lines[1..].join("\n").trim().to_string()
-        } else {
-            String::new()
-        };
+        let mut description = String::new();
+        let mut xp_reward = 10; // Default
+
+        // Parse body for metadata
+        if lines.len() > 1 {
+            for line in &lines[1..] {
+                let trimmed = line.trim();
+                if trimmed.starts_with("> Reward:") {
+                    if let Ok(val) = trimmed.replace("> Reward:", "").trim().parse::<i32>() {
+                        xp_reward = val;
+                    }
+                } else {
+                    description.push_str(line);
+                    description.push('\n');
+                }
+            }
+        }
+
+        let description = description.trim().to_string();
 
         if let Some(id) = &self.editing_task_id {
-            // Update existing
+            // Update existing (XP update not supported in update_task_content yet, let's fix that)
+            // For now, update title/desc/priority
             self.db
                 .update_task_content(id, &title, &description, priority)?;
         } else {
             // Create new
-            // XP logic: High priority = more XP? Or standardized? Let's keep 10 for now.
-            let task = Task::new(title, description, priority, 10);
+            let task = Task::new(title, description, priority, xp_reward);
             self.db.create_task(&task)?;
         }
 
@@ -190,7 +205,7 @@ impl<'a> App<'a> {
         self.editing_task_id = None;
         self.textarea = TextArea::default();
         self.textarea
-            .set_placeholder_text("Title (Line 1)\nDescription (Line 2+)...");
+            .set_placeholder_text("Title !priority\n> Reward: 50\n\nDescription...");
 
         self.refresh_state()?;
         Ok(())
@@ -236,7 +251,7 @@ impl<'a> App<'a> {
         match self.current_view {
             CurrentView::Dashboard => self.next_dashboard_task(),
             CurrentView::Kanban => self.next_kanban_item(),
-            CurrentView::Focus | CurrentView::Analytics => {}
+            CurrentView::Focus | CurrentView::Analytics | CurrentView::Splash => {}
         }
     }
 
@@ -244,7 +259,7 @@ impl<'a> App<'a> {
         match self.current_view {
             CurrentView::Dashboard => self.previous_dashboard_task(),
             CurrentView::Kanban => self.previous_kanban_item(),
-            CurrentView::Focus | CurrentView::Analytics => {}
+            CurrentView::Focus | CurrentView::Analytics | CurrentView::Splash => {}
         }
     }
 
@@ -364,6 +379,7 @@ impl<'a> App<'a> {
 
     pub fn cycle_view(&mut self) {
         self.current_view = match self.current_view {
+            CurrentView::Splash => CurrentView::Dashboard,
             CurrentView::Dashboard => CurrentView::Kanban,
             CurrentView::Kanban => CurrentView::Focus,
             CurrentView::Focus => CurrentView::Analytics,

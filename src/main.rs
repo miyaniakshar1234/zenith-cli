@@ -61,8 +61,16 @@ fn run_app<B: ratatui::backend::Backend>(
         if event::poll(Duration::from_millis(250))? {
             if let Event::Key(key) = event::read()? {
                 // IMPORTANT: FIX DOUBLE TYPING BUG
-                // Only process KeyPress events, ignore Release/Repeat
                 if key.kind != KeyEventKind::Press {
+                    continue;
+                }
+
+                // Handle Splash Screen Interception
+                if app.current_view == crate::app::CurrentView::Splash {
+                    if key.code == KeyCode::Char('q') {
+                        return Ok(());
+                    }
+                    app.current_view = crate::app::CurrentView::Dashboard;
                     continue;
                 }
 
