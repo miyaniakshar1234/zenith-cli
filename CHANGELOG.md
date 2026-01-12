@@ -2,6 +2,12 @@
 
 All notable changes to **Zenith CLI** will be documented in this file.
 
+## [1.2.0] - 2026-01-12
+### 🌟 Milestone Release
+- **Gamification**: Streaks, Daily Goals, and Leveling system fully integrated.
+- **Power User Suite**: Command Palette, Vim keys, and Smart Input parsing.
+- **Distribution**: Automated binary builds for Windows, Mac, and Linux (No Rust required).
+
 ## [1.1.1] - 2026-01-12
 ### 📚 Documentation
 - **Installation Guide**: Added clear `cargo install` and `zenith-cli` run instructions.
