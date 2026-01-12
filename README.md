@@ -1,9 +1,8 @@
-# Zenith CLI Task Manager v1.2.0 🚀
+# Zenith CLI Task Manager v1.1.0 🚀
 
 ![Build Status](https://img.shields.io/github/actions/workflow/status/miyaniakshar1234/zenith-cli/release.yml?style=flat-square&label=Release%20Build)
 ![License](https://img.shields.io/badge/license-MIT-blue?style=flat-square)
 ![Crates.io](https://img.shields.io/crates/v/zenith-cli?style=flat-square)
-![NPM](https://img.shields.io/npm/v/@miyaniakshar/zenith-cli?style=flat-square)
 
 ```text
 ███████╗███████╗███╗   ██╗██╗████████╗██╗  ██╗
@@ -33,31 +32,31 @@
 ### Method 1: The "Magical" One-Line Installer ✨ (Recommended)
 Works instantly on any computer. No Rust, No Node, No Downloads folder hunting.
 
+**Windows (PowerShell):**
+```powershell
+iwr https://raw.githubusercontent.com/miyaniakshar1234/zenith-cli/main/install.ps1 -useb | iex
+```
+
 **Linux / macOS / WSL:**
 ```bash
 curl -fsSL https://raw.githubusercontent.com/miyaniakshar1234/zenith-cli/main/install.sh | bash
 ```
 *After running, type `source ~/.bashrc` (or restart terminal) then `zenith-cli`.*
 
-**Windows (PowerShell):**
-```powershell
-iwr https://raw.githubusercontent.com/miyaniakshar1234/zenith-cli/main/install.ps1 -useb | iex
-```
+### Method 2: Direct Download (Manual)
+1. Go to the **[Releases Page](https://github.com/miyaniakshar1234/zenith-cli/releases)**.
+2. Download the file for your OS.
+3. Run it.
 
-### Method 2: Via NPM (Universal / Restricted Networks) 🌐
-If you have Node.js installed and cannot use the installer above:
-
-```bash
-npx @miyaniakshar/zenith-cli
-```
-*Note: This requires the package to be published to NPM registry.*
-
-### Method 3: Direct Download
-Go to the **[Releases Page](https://github.com/miyaniakshar1234/zenith-cli/releases)** and download the binary.
-
-### Method 4: Via Cargo (Developers)
+### Method 3: Via Cargo (For Developers)
 ```bash
 cargo install zenith-cli
+```
+
+## 🚀 Running the Application
+Simply type:
+```bash
+zenith-cli
 ```
 
 ## 🎮 Controls
