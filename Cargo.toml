@@ -4,6 +4,10 @@ version = "1.1.0"
 edition = "2021"
 authors = ["MiyaniAkshar1234"]
 description = "A high-performance, cyberpunk-styled CLI Task Manager & RPG."
+repository = "https://github.com/miyaniakshar1234/zenith-cli"
+license = "MIT"
+keywords = ["cli", "task-manager", "productivity", "tui", "rpg"]
+categories = ["command-line-utilities", "visualization"]
 
 [dependencies]
 # The UI Layer (Modern & Cool)
