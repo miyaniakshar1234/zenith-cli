@@ -239,4 +239,60 @@ impl Database {
         )?;
         Ok(())
     }
+
+    pub fn get_streak(&self) -> Result<u32> {
+        let mut stmt = self.conn.prepare(
+            "SELECT DISTINCT substr(completed_at, 1, 10) as day 
+             FROM tasks 
+             WHERE status = 'Done' AND completed_at IS NOT NULL
+             ORDER BY day DESC",
+        )?;
+
+        let days: Vec<String> = stmt
+            .query_map([], |row| row.get(0))?
+            .filter_map(|r| r.ok())
+            .collect();
+
+        if days.is_empty() {
+            return Ok(0);
+        }
+
+        let today = Utc::now().format("%Y-%m-%d").to_string();
+        let yesterday = (Utc::now() - chrono::Duration::days(1))
+            .format("%Y-%m-%d")
+            .to_string();
+
+        // If latest completed task was not today or yesterday, streak is 0
+        if days[0] != today && days[0] != yesterday {
+            return Ok(0);
+        }
+
+        let mut streak = 0;
+        // Start checking from the day of the latest task
+        let mut current_check = if days[0] == today {
+            Utc::now()
+        } else {
+            Utc::now() - chrono::Duration::days(1)
+        };
+
+        for day_str in days {
+            let expected = current_check.format("%Y-%m-%d").to_string();
+            if day_str == expected {
+                streak += 1;
+                current_check = current_check - chrono::Duration::days(1);
+            } else {
+                break;
+            }
+        }
+        Ok(streak)
+    }
+
+    pub fn get_tasks_today(&self) -> Result<u32> {
+        let today = Utc::now().format("%Y-%m-%d").to_string();
+        let mut stmt = self.conn.prepare(
+            "SELECT COUNT(*) FROM tasks WHERE status = 'Done' AND substr(completed_at, 1, 10) = ?1",
+        )?;
+        let count: u32 = stmt.query_row(params![today], |row| row.get(0))?;
+        Ok(count)
+    }
 }

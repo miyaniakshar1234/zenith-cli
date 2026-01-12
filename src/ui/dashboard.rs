@@ -59,7 +59,7 @@ fn draw_table(f: &mut Frame, app: &mut App, area: Rect) {
             // Priority Indicator
             let priority_marker = match task.priority {
                 TaskPriority::High => " 🔴",
-                TaskPriority::Medium => "", // Clean for default
+                TaskPriority::Medium => "",
                 TaskPriority::Low => " 🔵",
             };
 

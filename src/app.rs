@@ -125,6 +125,8 @@ pub struct App<'a> {
     pub show_help: bool,
     pub current_theme: ThemeType,
     pub show_quit_modal: bool,
+    pub streak: u32,
+    pub tasks_today: u32,
 }
 
 impl<'a> App<'a> {
@@ -133,6 +135,8 @@ impl<'a> App<'a> {
         let tasks = db.get_all_tasks()?;
         let user_profile = db.get_user_profile()?;
         let stats = db.get_weekly_stats()?;
+        let streak = db.get_streak().unwrap_or(0);
+        let tasks_today = db.get_tasks_today().unwrap_or(0);
 
         let mut table_state = TableState::default();
         if !tasks.is_empty() {
@@ -156,6 +160,8 @@ impl<'a> App<'a> {
             show_help: false,
             current_theme: ThemeType::Horizon,
             show_quit_modal: false,
+            streak,
+            tasks_today,
         })
     }
 
@@ -180,6 +186,8 @@ impl<'a> App<'a> {
 
         self.user_profile = self.db.get_user_profile()?;
         self.stats = self.db.get_weekly_stats()?;
+        self.streak = self.db.get_streak().unwrap_or(0);
+        self.tasks_today = self.db.get_tasks_today().unwrap_or(0);
 
         if self.table_state.selected().is_none() && !self.tasks.is_empty() {
             self.table_state.select(Some(0));

@@ -1,7 +1,7 @@
 use crate::app::App;
 use crate::ui::theme::get_theme;
 use ratatui::{
-    layout::{Constraint, Direction, Layout, Rect},
+    layout::{Alignment, Constraint, Direction, Layout, Rect},
     style::{Modifier, Style},
     text::Span,
     widgets::{BarChart, Block, Borders, Paragraph},
@@ -39,6 +39,22 @@ pub fn draw(f: &mut Frame, app: &App, area: Rect) {
     );
 
     f.render_widget(summary, chunks[0]);
+
+    if app.stats.is_empty() {
+        let empty = Paragraph::new(
+            "\n\nNo analytics data available.\nComplete tasks to generate velocity stats.",
+        )
+        .alignment(Alignment::Center)
+        .style(Style::default().fg(theme.dimmed))
+        .block(
+            Block::default()
+                .borders(Borders::ALL)
+                .border_style(Style::default().fg(theme.border))
+                .title(" Velocity "),
+        );
+        f.render_widget(empty, chunks[1]);
+        return;
+    }
 
     let bar_data: Vec<(&str, u64)> = app
         .stats

@@ -1,5 +1,5 @@
 use crate::app::{App, CurrentView, InputMode};
-use crate::ui::theme::HORIZON;
+use crate::ui::theme::get_theme;
 use ratatui::{
     layout::{Constraint, Direction, Layout, Rect},
     style::{Modifier, Style},
@@ -20,8 +20,10 @@ mod splash;
 pub mod theme;
 
 pub fn draw(f: &mut Frame, app: &mut App) {
+    let theme = get_theme(app.current_theme);
+
     // 1. Background
-    let bg_block = Block::default().style(Style::default().bg(HORIZON.bg));
+    let bg_block = Block::default().style(Style::default().bg(theme.bg));
     f.render_widget(bg_block, f.area());
 
     // 2. Main Layout (Header | Content | Footer)
@@ -68,6 +70,8 @@ pub fn draw(f: &mut Frame, app: &mut App) {
 }
 
 fn draw_header_tabs(f: &mut Frame, app: &App, area: Rect) {
+    let theme = get_theme(app.current_theme);
+
     let chunks = Layout::default()
         .direction(Direction::Horizontal)
         .constraints(
@@ -84,14 +88,14 @@ fn draw_header_tabs(f: &mut Frame, app: &App, area: Rect) {
     let logo = Paragraph::new(Span::styled(
         " ZENITH ",
         Style::default()
-            .fg(HORIZON.bg)
-            .bg(HORIZON.accent)
+            .fg(theme.bg)
+            .bg(theme.accent)
             .add_modifier(Modifier::BOLD),
     ))
     .block(
         Block::default()
             .borders(Borders::BOTTOM)
-            .border_style(Style::default().fg(HORIZON.border)),
+            .border_style(Style::default().fg(theme.border)),
     );
     f.render_widget(logo, chunks[0]);
 
@@ -101,14 +105,14 @@ fn draw_header_tabs(f: &mut Frame, app: &App, area: Rect) {
         .block(
             Block::default()
                 .borders(Borders::BOTTOM)
-                .border_style(Style::default().fg(HORIZON.border)),
+                .border_style(Style::default().fg(theme.border)),
         )
         .highlight_style(
             Style::default()
-                .fg(HORIZON.accent)
+                .fg(theme.accent)
                 .add_modifier(Modifier::BOLD),
         )
-        .style(Style::default().fg(HORIZON.dimmed))
+        .style(Style::default().fg(theme.dimmed))
         .select(match app.current_view {
             CurrentView::Dashboard => 0,
             CurrentView::Kanban => 1,
@@ -120,33 +124,40 @@ fn draw_header_tabs(f: &mut Frame, app: &App, area: Rect) {
 
     // HUD Stats
     let profile = &app.user_profile;
-    let stats_text = format!(" LVL {} | XP {} ", profile.level, profile.current_xp);
+    let stats_text = format!(
+        " 🔥 {} | Today: {} | LVL {} ",
+        app.streak, app.tasks_today, profile.level
+    );
     let stats = Paragraph::new(Span::styled(
         stats_text,
-        Style::default().fg(HORIZON.secondary),
+        Style::default().fg(theme.secondary),
     ))
     .alignment(ratatui::layout::Alignment::Right)
     .block(
         Block::default()
             .borders(Borders::BOTTOM)
-            .border_style(Style::default().fg(HORIZON.border)),
+            .border_style(Style::default().fg(theme.border)),
     );
     f.render_widget(stats, chunks[2]);
 }
 
 fn draw_status_bar(f: &mut Frame, app: &App, area: Rect) {
+    let theme = get_theme(app.current_theme);
+
     let (mode_str, mode_color) = match app.input_mode {
-        InputMode::Normal => (" NORMAL ", HORIZON.accent),
-        InputMode::Editing => (" INSERT ", HORIZON.success),
-        InputMode::Search => (" SEARCH ", HORIZON.warning),
+        InputMode::Normal => (" NORMAL ", theme.accent),
+        InputMode::Editing => (" INSERT ", theme.success),
+        InputMode::Search => (" SEARCH ", theme.warning),
     };
 
     let hints = match app.input_mode {
         InputMode::Editing => "TAB: Next • Enter: Save • Esc: Cancel",
         _ => match app.current_view {
-            CurrentView::Dashboard => "n: New • e: Edit • d: Delete • SPC: Status • /: Search",
-            CurrentView::Kanban => "h/l: Col • j/k: Task",
-            CurrentView::Focus => "t: Timer • r: Reset",
+            CurrentView::Dashboard => {
+                "n: New • e: Edit • d: Delete • SPC: Status • /: Search • T: Theme"
+            }
+            CurrentView::Kanban => "h/l: Col • j/k: Task • T: Theme",
+            CurrentView::Focus => "t: Timer • r: Reset • T: Theme",
             CurrentView::Splash => "Press Any Key",
             CurrentView::Analytics => "T: Theme",
         },
@@ -157,22 +168,22 @@ fn draw_status_bar(f: &mut Frame, app: &App, area: Rect) {
             mode_str,
             Style::default()
                 .bg(mode_color)
-                .fg(HORIZON.bg)
+                .fg(theme.bg)
                 .add_modifier(Modifier::BOLD),
         ),
         Span::raw(" "),
-        Span::styled(hints, Style::default().fg(HORIZON.dimmed)),
+        Span::styled(hints, Style::default().fg(theme.dimmed)),
         Span::raw(" "),
         if !app.search_query.is_empty() {
             Span::styled(
                 format!(" {}", app.search_query),
-                Style::default().fg(HORIZON.warning),
+                Style::default().fg(theme.warning),
             )
         } else {
             Span::raw("")
         },
     ]))
-    .style(Style::default().bg(HORIZON.surface));
+    .style(Style::default().bg(theme.surface));
 
     f.render_widget(status, area);
 }
