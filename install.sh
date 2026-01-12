@@ -28,10 +28,7 @@ case "$ARCH" in
         ARCH_TYPE="amd64"
         ;;
     arm64|aarch64)
-        # Assuming we build aarch64, if not fallback to amd64 (Rosetta on Mac)
-        # Current release workflow only builds amd64 for Mac/Linux explicitly in matrix
-        # So we force amd64 for now unless we update workflow
-        ARCH_TYPE="amd64" 
+        ARCH_TYPE="amd64" # Fallback/Rosetta for now as we only release amd64
         ;;
     *)
         echo "Unsupported Architecture: $ARCH"
@@ -40,17 +37,10 @@ case "$ARCH" in
 esac
 
 ASSET_NAME="zenith-cli-${OS_TYPE}-${ARCH_TYPE}"
-if [ "$OS_TYPE" = "windows" ]; then
-    ASSET_NAME="${ASSET_NAME}.exe"
-fi
 
 echo "🚀 Detecting system..."
 echo "   OS: $OS_TYPE"
 echo "   Arch: $ARCH_TYPE"
-
-# Get Latest Release URL (using GitHub API would be better but rate limits; direct latest download link is easier)
-# Actually, GitHub "latest" release redirect structure:
-# https://github.com/user/repo/releases/latest/download/asset_name
 
 DOWNLOAD_URL="https://github.com/${REPO}/releases/latest/download/${ASSET_NAME}"
 
@@ -62,11 +52,31 @@ chmod +x "$INSTALL_DIR/$BINARY"
 
 echo "✅ Installed to $INSTALL_DIR/$BINARY"
 
-# Check PATH
-if [[ ":$PATH:" != *":$INSTALL_DIR:"* ]]; then
-    echo "⚠️  Warning: $INSTALL_DIR is not in your PATH."
-    echo "   Add this to your shell config (~/.bashrc, ~/.zshrc, etc.):"
-    echo "   export PATH=\"\$PATH:$INSTALL_DIR\""
-else
-    echo "🎉 Ready! Run 'zenith-cli' to start."
+# Smart PATH Setup
+SHELL_CONFIG=""
+if [ -f "$HOME/.zshrc" ]; then
+    SHELL_CONFIG="$HOME/.zshrc"
+elif [ -f "$HOME/.bashrc" ]; then
+    SHELL_CONFIG="$HOME/.bashrc"
+elif [ -f "$HOME/.bash_profile" ]; then
+    SHELL_CONFIG="$HOME/.bash_profile"
 fi
+
+if [[ ":$PATH:" != *":$INSTALL_DIR:"* ]]; then
+    echo "🔧 Adding to PATH..."
+    if [ -n "$SHELL_CONFIG" ]; then
+        echo "" >> "$SHELL_CONFIG"
+        echo "# Zenith CLI" >> "$SHELL_CONFIG"
+        echo "export PATH=\"\$PATH:$INSTALL_DIR\"" >> "$SHELL_CONFIG"
+        echo "✅ Added to $SHELL_CONFIG"
+        echo "👉 Run 'source $SHELL_CONFIG' or restart terminal to use it."
+    else
+        echo "⚠️  Could not detect shell config. Run this manually:"
+        echo "   export PATH=\"\$PATH:$INSTALL_DIR\""
+    fi
+else
+    echo "🎉 Path is already correct."
+fi
+
+echo ""
+echo "🚀 Installation Complete! Run 'zenith-cli' to start."

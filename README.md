@@ -3,7 +3,6 @@
 ![Build Status](https://img.shields.io/github/actions/workflow/status/miyaniakshar1234/zenith-cli/release.yml?style=flat-square&label=Release%20Build)
 ![License](https://img.shields.io/badge/license-MIT-blue?style=flat-square)
 ![Crates.io](https://img.shields.io/crates/v/zenith-cli?style=flat-square)
-![NPM](https://img.shields.io/npm/v/@miyaniakshar/zenith-cli?style=flat-square)
 
 ```text
 ███████╗███████╗███╗   ██╗██╗████████╗██╗  ██╗
@@ -33,10 +32,11 @@
 ### Method 1: The "Magical" One-Line Installer ✨ (Recommended)
 Works instantly on any computer. No Rust, No Node, No Downloads folder hunting.
 
-**Linux / macOS:**
+**Linux / macOS / WSL:**
 ```bash
 curl -fsSL https://raw.githubusercontent.com/miyaniakshar1234/zenith-cli/main/install.sh | bash
 ```
+*After running, restart your terminal or type `source ~/.bashrc`.*
 
 **Windows (PowerShell):**
 ```powershell
@@ -45,14 +45,12 @@ iwr https://raw.githubusercontent.com/miyaniakshar1234/zenith-cli/main/install.p
 
 ### Method 2: Direct Download (Manual)
 1. Go to the **[Releases Page](https://github.com/miyaniakshar1234/zenith-cli/releases)**.
-2. Download the binary for your OS.
+2. Download the file for your OS.
 3. Run it.
 
-### Method 3: Via Terminal (For Developers)
+### Method 3: Via Cargo (For Developers)
 ```bash
 cargo install zenith-cli
-# OR
-npm install -g @miyaniakshar/zenith-cli
 ```
 
 ## 🚀 Running the Application
