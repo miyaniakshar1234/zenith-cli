@@ -2,6 +2,11 @@
 
 All notable changes to **Zenith CLI** will be documented in this file.
 
+## [1.1.1] - 2026-01-12
+### 📚 Documentation
+- **Installation Guide**: Added clear `cargo install` and `zenith-cli` run instructions.
+- **Credits**: Added author identity section.
+
 ## [1.1.0] - 2026-01-12
 ### 🚀 Features
 - **Global Distribution**: Published to `crates.io`.
