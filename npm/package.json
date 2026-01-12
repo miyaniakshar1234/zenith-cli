@@ -1,6 +1,6 @@
 {
   "name": "@miyaniakshar/zenith-cli",
-  "version": "1.2.0",
+  "version": "1.2.1",
   "description": "Industrial-grade Terminal Task Manager (Rust)",
   "bin": {
     "zenith-cli": "dist/index.js"

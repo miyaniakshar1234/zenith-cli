@@ -2,6 +2,10 @@
 
 All notable changes to **Zenith CLI** will be documented in this file.
 
+## [1.2.1] - 2026-01-12
+### 🚀 Distribution
+- **NPM**: Published `@miyaniakshar/zenith-cli` to NPM registry. `npx` now works globally.
+
 ## [1.2.0] - 2026-01-12
 ### 🌟 Milestone Release
 - **Gamification**: Streaks, Daily Goals, and Leveling system fully integrated.
