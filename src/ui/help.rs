@@ -1,5 +1,5 @@
-use crate::app::{App, CurrentView, InputMode};
-use crate::ui::theme::HORIZON;
+use crate::app::{App, InputMode};
+use crate::ui::theme::get_theme;
 use ratatui::{
     layout::{Constraint, Direction, Layout, Rect},
     style::{Modifier, Style},
@@ -8,6 +8,8 @@ use ratatui::{
 };
 
 pub fn draw(f: &mut Frame, app: &mut App) {
+    let theme = get_theme(app.current_theme);
+
     if app.input_mode == InputMode::Normal {
         let area = centered_rect(60, 60, f.area());
         f.render_widget(Clear, area);
@@ -16,8 +18,8 @@ pub fn draw(f: &mut Frame, app: &mut App) {
             .title(" COMMAND PALETTE ")
             .borders(Borders::ALL)
             .border_type(BorderType::Rounded)
-            .style(Style::default().bg(HORIZON.surface).fg(HORIZON.fg))
-            .border_style(Style::default().fg(HORIZON.accent));
+            .style(Style::default().bg(theme.surface).fg(theme.fg))
+            .border_style(Style::default().fg(theme.accent));
 
         f.render_widget(block.clone(), area);
 
@@ -27,11 +29,12 @@ pub fn draw(f: &mut Frame, app: &mut App) {
         let mut rows = vec![
             Row::new(vec!["Global", "TAB", "Switch View"]),
             Row::new(vec!["Global", "?", "Toggle Help"]),
+            Row::new(vec!["Global", "T", "Switch Theme"]),
             Row::new(vec!["Global", "q", "Quit"]),
         ];
 
         match app.current_view {
-            CurrentView::Dashboard => {
+            crate::app::CurrentView::Dashboard => {
                 rows.extend(vec![
                     Row::new(vec!["Dashboard", "n", "New Task (!h/!m/!l for priority)"]),
                     Row::new(vec!["Dashboard", "e", "Edit Selected Task"]),
@@ -41,19 +44,19 @@ pub fn draw(f: &mut Frame, app: &mut App) {
                     Row::new(vec!["Dashboard", "j/k", "Navigate List"]),
                 ]);
             }
-            CurrentView::Kanban => {
+            crate::app::CurrentView::Kanban => {
                 rows.extend(vec![
                     Row::new(vec!["Kanban", "h/l", "Switch Column"]),
                     Row::new(vec!["Kanban", "j/k", "Navigate Tasks"]),
                 ]);
             }
-            CurrentView::Focus => {
+            crate::app::CurrentView::Focus => {
                 rows.extend(vec![
                     Row::new(vec!["Focus", "t", "Start/Pause Timer"]),
                     Row::new(vec!["Focus", "r", "Reset Timer"]),
                 ]);
             }
-            CurrentView::Analytics | CurrentView::Splash => {}
+            crate::app::CurrentView::Analytics | crate::app::CurrentView::Splash => {}
         }
 
         let table = Table::new(
@@ -67,7 +70,7 @@ pub fn draw(f: &mut Frame, app: &mut App) {
         .header(
             Row::new(vec!["CONTEXT", "KEY", "ACTION"]).style(
                 Style::default()
-                    .fg(HORIZON.accent)
+                    .fg(theme.accent)
                     .add_modifier(Modifier::BOLD),
             ),
         )

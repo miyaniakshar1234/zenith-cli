@@ -1,6 +1,6 @@
 use crate::app::{App, FormField};
 use crate::db::models::TaskPriority;
-use crate::ui::theme::HORIZON;
+use crate::ui::theme::get_theme;
 use ratatui::{
     layout::{Constraint, Direction, Layout, Rect},
     style::{Modifier, Style},
@@ -9,6 +9,8 @@ use ratatui::{
 };
 
 pub fn draw_form_modal(f: &mut Frame, app: &mut App) {
+    let theme = get_theme(app.current_theme);
+
     let area = centered_rect(60, 60, f.area());
     f.render_widget(Clear, area);
 
@@ -21,14 +23,14 @@ pub fn draw_form_modal(f: &mut Frame, app: &mut App) {
     let block = Block::default()
         .borders(Borders::ALL)
         .border_type(BorderType::Rounded)
-        .border_style(Style::default().fg(HORIZON.accent))
+        .border_style(Style::default().fg(theme.accent))
         .title(title)
         .title_style(
             Style::default()
-                .fg(HORIZON.accent)
+                .fg(theme.accent)
                 .add_modifier(Modifier::BOLD),
         )
-        .style(Style::default().bg(HORIZON.surface));
+        .style(Style::default().bg(theme.surface));
 
     f.render_widget(block.clone(), area);
 
@@ -48,9 +50,9 @@ pub fn draw_form_modal(f: &mut Frame, app: &mut App) {
 
     // 1. Title Input
     let title_border = if app.task_form.active_field == FormField::Title {
-        HORIZON.accent
+        theme.accent
     } else {
-        HORIZON.dimmed
+        theme.dimmed
     };
     app.task_form.title.set_block(
         Block::default()
@@ -58,16 +60,14 @@ pub fn draw_form_modal(f: &mut Frame, app: &mut App) {
             .title("Title")
             .border_style(Style::default().fg(title_border)),
     );
-    app.task_form
-        .title
-        .set_style(Style::default().fg(HORIZON.fg));
+    app.task_form.title.set_style(Style::default().fg(theme.fg));
     f.render_widget(&app.task_form.title, chunks[0]);
 
     // 2. Priority Input
     let prio_border = if app.task_form.active_field == FormField::Priority {
-        HORIZON.accent
+        theme.accent
     } else {
-        HORIZON.dimmed
+        theme.dimmed
     };
     let prio_text = match app.task_form.priority {
         TaskPriority::High => "🔴 HIGH",
@@ -82,7 +82,7 @@ pub fn draw_form_modal(f: &mut Frame, app: &mut App) {
                 .border_style(Style::default().fg(prio_border)),
         )
         .alignment(ratatui::layout::Alignment::Center)
-        .style(Style::default().fg(HORIZON.fg).add_modifier(Modifier::BOLD));
+        .style(Style::default().fg(theme.fg).add_modifier(Modifier::BOLD));
     f.render_widget(prio_widget, chunks[1]);
 
     // 3. XP & Due Date
@@ -93,9 +93,9 @@ pub fn draw_form_modal(f: &mut Frame, app: &mut App) {
 
     // XP
     let xp_border = if app.task_form.active_field == FormField::XP {
-        HORIZON.accent
+        theme.accent
     } else {
-        HORIZON.dimmed
+        theme.dimmed
     };
     app.task_form.xp.set_block(
         Block::default()
@@ -103,14 +103,14 @@ pub fn draw_form_modal(f: &mut Frame, app: &mut App) {
             .title("XP")
             .border_style(Style::default().fg(xp_border)),
     );
-    app.task_form.xp.set_style(Style::default().fg(HORIZON.fg));
+    app.task_form.xp.set_style(Style::default().fg(theme.fg));
     f.render_widget(&app.task_form.xp, row3[0]);
 
     // Due Date
     let due_border = if app.task_form.active_field == FormField::DueDate {
-        HORIZON.accent
+        theme.accent
     } else {
-        HORIZON.dimmed
+        theme.dimmed
     };
     app.task_form.due_date.set_block(
         Block::default()
@@ -120,14 +120,14 @@ pub fn draw_form_modal(f: &mut Frame, app: &mut App) {
     );
     app.task_form
         .due_date
-        .set_style(Style::default().fg(HORIZON.fg));
+        .set_style(Style::default().fg(theme.fg));
     f.render_widget(&app.task_form.due_date, row3[1]);
 
     // 4. Description Input
     let desc_border = if app.task_form.active_field == FormField::Description {
-        HORIZON.accent
+        theme.accent
     } else {
-        HORIZON.dimmed
+        theme.dimmed
     };
     app.task_form.description.set_block(
         Block::default()
@@ -137,7 +137,7 @@ pub fn draw_form_modal(f: &mut Frame, app: &mut App) {
     );
     app.task_form
         .description
-        .set_style(Style::default().fg(HORIZON.fg));
+        .set_style(Style::default().fg(theme.fg));
     f.render_widget(&app.task_form.description, chunks[3]);
 }
 

@@ -1,4 +1,5 @@
-use crate::ui::theme::HORIZON;
+use crate::app::App;
+use crate::ui::theme::get_theme;
 use ratatui::{
     layout::{Alignment, Constraint, Direction, Layout, Rect},
     style::{Modifier, Style},
@@ -7,7 +8,9 @@ use ratatui::{
     Frame,
 };
 
-pub fn draw(f: &mut Frame, area: Rect) {
+pub fn draw(f: &mut Frame, app: &App, area: Rect) {
+    let theme = get_theme(app.current_theme);
+
     let chunks = Layout::default()
         .direction(Direction::Vertical)
         .constraints(
@@ -23,7 +26,6 @@ pub fn draw(f: &mut Frame, area: Rect) {
         .split(area);
 
     // Banner (ZENITH ASCII)
-    // Using simple text for stability, but styled heavily
     let banner_text = vec![
         "███████╗███████╗███╗   ██╗██╗████████╗██╗  ██╗",
         "╚══███╔╝██╔════╝████╗  ██║██║╚══██╔══╝██║  ██║",
@@ -36,7 +38,7 @@ pub fn draw(f: &mut Frame, area: Rect) {
     let banner = Paragraph::new(banner_text.join("\n"))
         .style(
             Style::default()
-                .fg(HORIZON.accent)
+                .fg(theme.accent)
                 .add_modifier(Modifier::BOLD),
         )
         .alignment(Alignment::Center);
@@ -47,7 +49,7 @@ pub fn draw(f: &mut Frame, area: Rect) {
     let subtitle = Paragraph::new("INDUSTRIAL GRADE TASK MANAGEMENT SYSTEM")
         .style(
             Style::default()
-                .fg(HORIZON.secondary)
+                .fg(theme.secondary)
                 .add_modifier(Modifier::BOLD),
         )
         .alignment(Alignment::Center);
@@ -56,21 +58,21 @@ pub fn draw(f: &mut Frame, area: Rect) {
     // Info / Credits
     let info_text = vec![
         Line::from(vec![
-            Span::styled("Version: ", Style::default().fg(HORIZON.dimmed)),
-            Span::styled("1.1.0 (Power User)", Style::default().fg(HORIZON.fg)),
+            Span::styled("Version: ", Style::default().fg(theme.dimmed)),
+            Span::styled("1.1.0 (Power User)", Style::default().fg(theme.fg)),
         ]),
         Line::from(vec![
-            Span::styled("Engineer: ", Style::default().fg(HORIZON.dimmed)),
+            Span::styled("Engineer: ", Style::default().fg(theme.dimmed)),
             Span::styled(
                 "Miyani Akshar",
                 Style::default()
-                    .fg(HORIZON.success)
+                    .fg(theme.success)
                     .add_modifier(Modifier::BOLD),
             ),
         ]),
         Line::from(vec![
-            Span::styled("Status: ", Style::default().fg(HORIZON.dimmed)),
-            Span::styled("OPERATIONAL", Style::default().fg(HORIZON.accent)),
+            Span::styled("Status: ", Style::default().fg(theme.dimmed)),
+            Span::styled("OPERATIONAL", Style::default().fg(theme.accent)),
         ]),
     ];
 
@@ -81,14 +83,14 @@ pub fn draw(f: &mut Frame, area: Rect) {
     let prompt = Paragraph::new("PRESS ANY KEY TO INITIALIZE...")
         .style(
             Style::default()
-                .fg(HORIZON.fg)
+                .fg(theme.fg)
                 .add_modifier(Modifier::SLOW_BLINK),
         )
         .alignment(Alignment::Center)
         .block(
             Block::default()
                 .borders(Borders::TOP)
-                .border_style(Style::default().fg(HORIZON.border)),
+                .border_style(Style::default().fg(theme.border)),
         );
     f.render_widget(prompt, chunks[4]);
 }

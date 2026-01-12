@@ -1,17 +1,17 @@
-use crate::app::{App, CurrentView, FormField, InputMode};
-use crate::db::models::TaskPriority;
+use crate::app::{App, CurrentView, InputMode};
 use crate::ui::theme::HORIZON;
 use ratatui::{
     layout::{Constraint, Direction, Layout, Rect},
     style::{Modifier, Style},
     text::{Line, Span},
-    widgets::{Block, BorderType, Borders, Clear, Paragraph, Tabs},
+    widgets::{Block, Borders, Paragraph, Tabs},
     Frame,
 };
 
 mod analytics;
 mod dashboard;
 mod focus;
+mod form;
 mod help;
 mod inspector;
 mod kanban;
@@ -45,14 +45,14 @@ pub fn draw(f: &mut Frame, app: &mut App) {
         CurrentView::Kanban => kanban::draw(f, app, content_area),
         CurrentView::Focus => focus::draw(f, app, content_area),
         CurrentView::Analytics => analytics::draw(f, app, content_area),
-        CurrentView::Splash => splash::draw(f, f.area()),
+        CurrentView::Splash => splash::draw(f, app, f.area()),
     }
 
     draw_status_bar(f, app, layout[2]);
 
     // 3. Modals (Overlays)
     if app.input_mode == InputMode::Editing {
-        draw_form_modal(f, app);
+        form::draw_form_modal(f, app);
     }
 
     // Help Overlay
@@ -108,7 +108,7 @@ fn draw_header_tabs(f: &mut Frame, app: &App, area: Rect) {
             CurrentView::Kanban => 1,
             CurrentView::Focus => 2,
             CurrentView::Analytics => 3,
-            CurrentView::Splash => 0, // No tab selected usually, but mapping to 0
+            CurrentView::Splash => 0,
         });
     f.render_widget(tabs, chunks[1]);
 
@@ -136,13 +136,13 @@ fn draw_status_bar(f: &mut Frame, app: &App, area: Rect) {
     };
 
     let hints = match app.input_mode {
-        InputMode::Editing => "TAB: Next Field • Enter: Save • Esc: Cancel",
+        InputMode::Editing => "TAB: Next • Enter: Save • Esc: Cancel",
         _ => match app.current_view {
             CurrentView::Dashboard => "n: New • e: Edit • d: Delete • SPC: Status • /: Search",
             CurrentView::Kanban => "h/l: Col • j/k: Task",
             CurrentView::Focus => "t: Timer • r: Reset",
             CurrentView::Splash => "Press Any Key",
-            CurrentView::Analytics => "",
+            CurrentView::Analytics => "T: Theme",
         },
     };
 
@@ -169,140 +169,4 @@ fn draw_status_bar(f: &mut Frame, app: &App, area: Rect) {
     .style(Style::default().bg(HORIZON.surface));
 
     f.render_widget(status, area);
-}
-
-fn draw_form_modal(f: &mut Frame, app: &mut App) {
-    let area = centered_rect(60, 60, f.area());
-    f.render_widget(Clear, area);
-
-    let title = if app.editing_task_id.is_some() {
-        " EDIT TASK "
-    } else {
-        " NEW TASK "
-    };
-
-    let block = Block::default()
-        .borders(Borders::ALL)
-        .border_type(BorderType::Rounded)
-        .border_style(Style::default().fg(HORIZON.accent))
-        .title(title)
-        .title_style(
-            Style::default()
-                .fg(HORIZON.accent)
-                .add_modifier(Modifier::BOLD),
-        )
-        .style(Style::default().bg(HORIZON.surface));
-
-    f.render_widget(block.clone(), area);
-
-    let inner = block.inner(area);
-    let chunks = Layout::default()
-        .direction(Direction::Vertical)
-        .constraints(
-            [
-                Constraint::Length(3), // Title
-                Constraint::Length(3), // Priority
-                Constraint::Length(3), // XP
-                Constraint::Min(0),    // Description
-            ]
-            .as_ref(),
-        )
-        .split(inner);
-
-    // 1. Title Input
-    let title_border = if app.task_form.active_field == FormField::Title {
-        HORIZON.accent
-    } else {
-        HORIZON.dimmed
-    };
-    app.task_form.title.set_block(
-        Block::default()
-            .borders(Borders::ALL)
-            .title("Title")
-            .border_style(Style::default().fg(title_border)),
-    );
-    app.task_form
-        .title
-        .set_style(Style::default().fg(HORIZON.fg));
-    f.render_widget(&app.task_form.title, chunks[0]);
-
-    // 2. Priority Input (Selector)
-    let prio_border = if app.task_form.active_field == FormField::Priority {
-        HORIZON.accent
-    } else {
-        HORIZON.dimmed
-    };
-    let prio_text = match app.task_form.priority {
-        TaskPriority::High => "🔴 HIGH",
-        TaskPriority::Medium => "🟡 MEDIUM",
-        TaskPriority::Low => "🔵 LOW",
-    };
-    let prio_widget = Paragraph::new(prio_text)
-        .block(
-            Block::default()
-                .borders(Borders::ALL)
-                .title("Priority (< > to change)")
-                .border_style(Style::default().fg(prio_border)),
-        )
-        .alignment(ratatui::layout::Alignment::Center)
-        .style(Style::default().fg(HORIZON.fg).add_modifier(Modifier::BOLD));
-    f.render_widget(prio_widget, chunks[1]);
-
-    // 3. XP Input
-    let xp_border = if app.task_form.active_field == FormField::XP {
-        HORIZON.accent
-    } else {
-        HORIZON.dimmed
-    };
-    app.task_form.xp.set_block(
-        Block::default()
-            .borders(Borders::ALL)
-            .title("Reward (XP)")
-            .border_style(Style::default().fg(xp_border)),
-    );
-    app.task_form.xp.set_style(Style::default().fg(HORIZON.fg));
-    f.render_widget(&app.task_form.xp, chunks[2]);
-
-    // 4. Description Input
-    let desc_border = if app.task_form.active_field == FormField::Description {
-        HORIZON.accent
-    } else {
-        HORIZON.dimmed
-    };
-    app.task_form.description.set_block(
-        Block::default()
-            .borders(Borders::ALL)
-            .title("Description")
-            .border_style(Style::default().fg(desc_border)),
-    );
-    app.task_form
-        .description
-        .set_style(Style::default().fg(HORIZON.fg));
-    f.render_widget(&app.task_form.description, chunks[3]);
-}
-
-fn centered_rect(percent_x: u16, percent_y: u16, r: Rect) -> Rect {
-    let popup_layout = Layout::default()
-        .direction(Direction::Vertical)
-        .constraints(
-            [
-                Constraint::Percentage((100 - percent_y) / 2),
-                Constraint::Percentage(percent_y),
-                Constraint::Percentage((100 - percent_y) / 2),
-            ]
-            .as_ref(),
-        )
-        .split(r);
-
-    Layout::default()
-        .direction(Direction::Horizontal)
-        .constraints(
-            [
-                Constraint::Percentage((100 - percent_x) / 2),
-                Constraint::Percentage(percent_x),
-                Constraint::Percentage((100 - percent_x) / 2),
-            ]
-            .as_ref(),
-        )
-        .split(popup_layout[1])[1]
 }

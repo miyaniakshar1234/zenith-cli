@@ -1,6 +1,6 @@
 use crate::app::App;
 use crate::db::models::TaskStatus;
-use crate::ui::theme::HORIZON;
+use crate::ui::theme::get_theme;
 use ratatui::{
     layout::{Constraint, Direction, Layout, Rect},
     style::{Modifier, Style},
@@ -23,11 +23,13 @@ pub fn draw(f: &mut Frame, app: &mut App, area: Rect) {
         .split(area);
 
     draw_col(f, app, chunks[0], TaskStatus::Todo, "TODO", 0);
-    draw_col(f, app, chunks[1], TaskStatus::Doing, "DOING", 1);
+    draw_col(f, app, chunks[1], TaskStatus::Doing, "IN PROGRESS", 1);
     draw_col(f, app, chunks[2], TaskStatus::Done, "DONE", 2);
 }
 
 fn draw_col(f: &mut Frame, app: &mut App, area: Rect, status: TaskStatus, title: &str, idx: usize) {
+    let theme = get_theme(app.current_theme);
+
     let tasks: Vec<ListItem> = app
         .tasks
         .iter()
@@ -37,9 +39,9 @@ fn draw_col(f: &mut Frame, app: &mut App, area: Rect, status: TaskStatus, title:
 
     let is_focused = app.kanban_state.focused_col == idx;
     let border_color = if is_focused {
-        HORIZON.accent
+        theme.accent
     } else {
-        HORIZON.border
+        theme.border
     };
 
     let block = Block::default()
@@ -54,17 +56,17 @@ fn draw_col(f: &mut Frame, app: &mut App, area: Rect, status: TaskStatus, title:
             Style::default()
                 .add_modifier(Modifier::BOLD)
                 .fg(if is_focused {
-                    HORIZON.accent
+                    theme.accent
                 } else {
-                    HORIZON.dimmed
+                    theme.dimmed
                 }),
         ))
         .border_style(Style::default().fg(border_color));
 
     let list = List::new(tasks).block(block).highlight_style(
         Style::default()
-            .bg(HORIZON.selection_bg)
-            .fg(HORIZON.selection_fg),
+            .bg(theme.selection_bg)
+            .fg(theme.selection_fg),
     );
 
     match idx {

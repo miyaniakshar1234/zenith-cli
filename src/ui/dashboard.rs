@@ -1,6 +1,6 @@
 use crate::app::App;
 use crate::db::models::{TaskPriority, TaskStatus};
-use crate::ui::theme::HORIZON;
+use crate::ui::theme::get_theme;
 use ratatui::{
     layout::{Constraint, Direction, Layout, Rect},
     style::{Modifier, Style},
@@ -27,9 +27,11 @@ pub fn draw(f: &mut Frame, app: &mut App, area: Rect) {
 }
 
 fn draw_table(f: &mut Frame, app: &mut App, area: Rect) {
+    let theme = get_theme(app.current_theme);
+
     if app.tasks.is_empty() {
         let p = Paragraph::new("No tasks found.\nPress 'n' to create one.")
-            .style(Style::default().fg(HORIZON.dimmed))
+            .style(Style::default().fg(theme.dimmed))
             .alignment(ratatui::layout::Alignment::Center)
             .block(Block::default().borders(Borders::NONE));
         f.render_widget(p, area);
@@ -41,17 +43,17 @@ fn draw_table(f: &mut Frame, app: &mut App, area: Rect) {
         .iter()
         .map(|task| {
             let (icon, color) = match task.status {
-                TaskStatus::Todo => ("○", HORIZON.fg),
-                TaskStatus::Doing => ("◉", HORIZON.warning),
-                TaskStatus::Done => ("●", HORIZON.success),
+                TaskStatus::Todo => ("○", theme.fg),
+                TaskStatus::Doing => ("◉", theme.warning),
+                TaskStatus::Done => ("●", theme.success),
             };
 
             let title_style = if task.status == TaskStatus::Done {
                 Style::default()
-                    .fg(HORIZON.dimmed)
+                    .fg(theme.dimmed)
                     .add_modifier(Modifier::CROSSED_OUT)
             } else {
-                Style::default().fg(HORIZON.fg).add_modifier(Modifier::BOLD)
+                Style::default().fg(theme.fg).add_modifier(Modifier::BOLD)
             };
 
             // Priority Indicator
@@ -71,10 +73,10 @@ fn draw_table(f: &mut Frame, app: &mut App, area: Rect) {
                 Cell::from(format!("{}{}{}", task.title, priority_marker, due_str))
                     .style(title_style),
                 Cell::from(format!("{} XP", task.xp_reward))
-                    .style(Style::default().fg(HORIZON.secondary)),
+                    .style(Style::default().fg(theme.secondary)),
             ])
             .height(1)
-            .style(Style::default().bg(HORIZON.bg))
+            .style(Style::default().bg(theme.bg))
         })
         .collect();
 
@@ -89,21 +91,21 @@ fn draw_table(f: &mut Frame, app: &mut App, area: Rect) {
     .block(
         Block::default()
             .borders(Borders::RIGHT)
-            .border_style(Style::default().fg(HORIZON.border)),
+            .border_style(Style::default().fg(theme.border)),
     )
     .header(
         Row::new(vec!["", "TASK", "REWARD"])
             .style(
                 Style::default()
-                    .fg(HORIZON.dimmed)
+                    .fg(theme.dimmed)
                     .add_modifier(Modifier::BOLD),
             )
             .bottom_margin(1),
     )
     .row_highlight_style(
         Style::default()
-            .bg(HORIZON.selection_bg)
-            .fg(HORIZON.selection_fg)
+            .bg(theme.selection_bg)
+            .fg(theme.selection_fg)
             .add_modifier(Modifier::BOLD),
     );
 
@@ -111,9 +113,11 @@ fn draw_table(f: &mut Frame, app: &mut App, area: Rect) {
 }
 
 fn draw_preview(f: &mut Frame, app: &App, area: Rect) {
+    let theme = get_theme(app.current_theme);
+
     let block = Block::default()
         .borders(Borders::NONE)
-        .style(Style::default().bg(HORIZON.surface));
+        .style(Style::default().bg(theme.surface));
     f.render_widget(block, area);
 
     let inner_area = Layout::default()
@@ -148,16 +152,16 @@ fn draw_preview(f: &mut Frame, app: &App, area: Rect) {
 
     // 1. Status Tag
     let (status_text, status_color) = match task.status {
-        TaskStatus::Todo => ("  TODO  ", HORIZON.dimmed),
-        TaskStatus::Doing => ("  IN PROGRESS  ", HORIZON.warning),
-        TaskStatus::Done => ("  COMPLETED  ", HORIZON.success),
+        TaskStatus::Todo => ("  TODO  ", theme.dimmed),
+        TaskStatus::Doing => ("  IN PROGRESS  ", theme.warning),
+        TaskStatus::Done => ("  COMPLETED  ", theme.success),
     };
 
     let status_badge = Paragraph::new(Span::styled(
         status_text,
         Style::default()
             .bg(status_color)
-            .fg(HORIZON.bg)
+            .fg(theme.bg)
             .add_modifier(Modifier::BOLD),
     ));
     f.render_widget(status_badge, chunks[0]);
@@ -173,13 +177,13 @@ fn draw_preview(f: &mut Frame, app: &App, area: Rect) {
         Span::styled(
             priority_text,
             Style::default()
-                .fg(HORIZON.error)
+                .fg(theme.error)
                 .add_modifier(Modifier::BOLD),
         ),
         Span::styled(
             &task.title,
             Style::default()
-                .fg(HORIZON.accent)
+                .fg(theme.accent)
                 .add_modifier(Modifier::BOLD),
         ),
     ]);
@@ -198,7 +202,7 @@ fn draw_preview(f: &mut Frame, app: &App, area: Rect) {
         task.created_at.format("%b %d"),
         due_str
     );
-    let meta = Paragraph::new(meta_text).style(Style::default().fg(HORIZON.dimmed));
+    let meta = Paragraph::new(meta_text).style(Style::default().fg(theme.dimmed));
     f.render_widget(meta, chunks[2]);
 
     // 4. Description
@@ -208,7 +212,7 @@ fn draw_preview(f: &mut Frame, app: &App, area: Rect) {
         &task.description
     };
     let description = Paragraph::new(desc)
-        .style(Style::default().fg(HORIZON.fg))
+        .style(Style::default().fg(theme.fg))
         .wrap(Wrap { trim: true });
     f.render_widget(description, chunks[4]);
 }

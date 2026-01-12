@@ -1,5 +1,5 @@
 use crate::app::App;
-use crate::ui::theme::HORIZON;
+use crate::ui::theme::get_theme;
 use ratatui::{
     layout::{Alignment, Constraint, Direction, Layout, Rect},
     style::{Modifier, Style},
@@ -8,6 +8,8 @@ use ratatui::{
 };
 
 pub fn draw(f: &mut Frame, app: &mut App, area: Rect) {
+    let theme = get_theme(app.current_theme);
+
     let center = Layout::default()
         .direction(Direction::Vertical)
         .constraints(
@@ -37,13 +39,13 @@ pub fn draw(f: &mut Frame, app: &mut App, area: Rect) {
     let time_str = format!("{:02}:{:02}", remaining / 60, remaining % 60);
 
     let timer = Paragraph::new(time_str)
-        .style(Style::default().fg(HORIZON.fg).add_modifier(Modifier::BOLD)) // Removed font size logic for cleanliness
+        .style(Style::default().fg(theme.fg).add_modifier(Modifier::BOLD))
         .alignment(Alignment::Center)
         .block(
             Block::default()
                 .borders(Borders::ALL)
                 .border_type(BorderType::Rounded)
-                .border_style(Style::default().fg(HORIZON.accent)),
+                .border_style(Style::default().fg(theme.accent)),
         );
 
     f.render_widget(timer, chunks[0]);
@@ -56,7 +58,7 @@ pub fn draw(f: &mut Frame, app: &mut App, area: Rect) {
     };
 
     let gauge = Gauge::default()
-        .gauge_style(Style::default().fg(HORIZON.success))
+        .gauge_style(Style::default().fg(theme.success))
         .ratio(ratio)
         .use_unicode(true);
 

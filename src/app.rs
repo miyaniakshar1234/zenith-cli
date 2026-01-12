@@ -2,6 +2,7 @@ use crate::db::{
     models::{Task, TaskPriority, TaskStatus, UserProfile},
     Database,
 };
+use crate::ui::theme::ThemeType;
 use chrono::{DateTime, Utc};
 use color_eyre::eyre::Result;
 use ratatui::widgets::{ListState, TableState};
@@ -122,6 +123,7 @@ pub struct App<'a> {
     pub search_query: String,
     pub stats: Vec<(String, u64)>,
     pub show_help: bool,
+    pub current_theme: ThemeType,
 }
 
 impl<'a> App<'a> {
@@ -151,7 +153,12 @@ impl<'a> App<'a> {
             search_query: String::new(),
             stats,
             show_help: false,
+            current_theme: ThemeType::Horizon,
         })
+    }
+
+    pub fn next_theme(&mut self) {
+        self.current_theme = self.current_theme.next();
     }
 
     pub fn refresh_state(&mut self) -> Result<()> {
