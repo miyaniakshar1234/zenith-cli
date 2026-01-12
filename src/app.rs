@@ -5,6 +5,7 @@ use crate::db::{
 use crate::ui::theme::ThemeType;
 use chrono::{DateTime, Utc};
 use color_eyre::eyre::Result;
+use notify_rust::Notification;
 use ratatui::widgets::{ListState, TableState};
 use tui_textarea::TextArea;
 
@@ -138,6 +139,19 @@ impl<'a> App<'a> {
         let streak = db.get_streak().unwrap_or(0);
         let tasks_today = db.get_tasks_today().unwrap_or(0);
 
+        // Load Theme
+        let current_theme = if let Ok(Some(theme_str)) = db.get_setting("theme") {
+            match theme_str.as_str() {
+                "Horizon" => ThemeType::Horizon,
+                "Nebula" => ThemeType::Nebula,
+                "Nord" => ThemeType::Nord,
+                "Cyberpunk" => ThemeType::Cyberpunk,
+                _ => ThemeType::Horizon,
+            }
+        } else {
+            ThemeType::Horizon
+        };
+
         let mut table_state = TableState::default();
         if !tasks.is_empty() {
             table_state.select(Some(0));
@@ -158,7 +172,7 @@ impl<'a> App<'a> {
             search_query: String::new(),
             stats,
             show_help: false,
-            current_theme: ThemeType::Horizon,
+            current_theme,
             show_quit_modal: false,
             streak,
             tasks_today,
@@ -167,6 +181,13 @@ impl<'a> App<'a> {
 
     pub fn next_theme(&mut self) {
         self.current_theme = self.current_theme.next();
+        let theme_str = match self.current_theme {
+            ThemeType::Horizon => "Horizon",
+            ThemeType::Nebula => "Nebula",
+            ThemeType::Nord => "Nord",
+            ThemeType::Cyberpunk => "Cyberpunk",
+        };
+        let _ = self.db.set_setting("theme", theme_str);
     }
 
     pub fn refresh_state(&mut self) -> Result<()> {
@@ -491,6 +512,12 @@ impl<'a> App<'a> {
                     } else {
                         self.focus_state.remaining_sec = 0;
                         self.focus_state.is_running = false;
+
+                        // Notify
+                        let _ = Notification::new()
+                            .summary("Zenith Focus")
+                            .body("Session Complete! Take a break.")
+                            .show();
                     }
                     self.focus_state.last_tick = Some(now);
                 }

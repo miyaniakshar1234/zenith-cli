@@ -1,6 +1,6 @@
 [package]
 name = "zenith-cli"
-version = "1.0.0"
+version = "1.1.0"
 edition = "2021"
 authors = ["MiyaniAkshar1234"]
 description = "A high-performance, cyberpunk-styled CLI Task Manager & RPG."
@@ -18,6 +18,7 @@ chrono = { version = "0.4.38", features = ["serde"] }
 serde = { version = "1.0", features = ["derive"] }
 uuid = { version = "1.10.0", features = ["v4"] }
 anyhow = "1.0"
+notify-rust = "4.11.0"
 
 # The Professional Polish
 color-eyre = "0.6.3"
