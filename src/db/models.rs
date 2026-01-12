@@ -72,8 +72,8 @@ pub struct UserProfile {
     pub next_level_xp: i32,
 }
 
-impl UserProfile {
-    pub fn default() -> Self {
+impl Default for UserProfile {
+    fn default() -> Self {
         Self {
             id: 1,
             level: 1,

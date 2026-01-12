@@ -84,6 +84,11 @@ fn run_app<B: ratatui::backend::Backend>(
                                 eprintln!("Error toggling status: {}", e);
                             }
                         }
+                        KeyCode::Char('d') | KeyCode::Delete => {
+                            if let Err(e) = app.delete_current_task() {
+                                eprintln!("Error deleting task: {}", e);
+                            }
+                        }
                         _ => {}
                     },
                     InputMode::Editing => match key.code {

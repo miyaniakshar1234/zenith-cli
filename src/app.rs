@@ -61,7 +61,6 @@ impl Default for KanbanState {
 }
 
 pub struct App {
-    pub running: bool,
     pub db: Database,
     pub tasks: Vec<Task>,
     pub user_profile: UserProfile,
@@ -84,7 +83,6 @@ impl App {
         }
 
         Ok(Self {
-            running: true,
             db,
             tasks,
             user_profile,
@@ -280,6 +278,29 @@ impl App {
                 self.db.update_task_status(&task.id, new_status)?;
                 self.refresh_state()?;
                 if i < self.tasks.len() {
+                    self.list_state.select(Some(i));
+                }
+            }
+        }
+        Ok(())
+    }
+
+    pub fn delete_current_task(&mut self) -> Result<()> {
+        if self.current_view != CurrentView::Dashboard {
+            return Ok(());
+        }
+
+        if let Some(i) = self.list_state.selected() {
+            if let Some(task) = self.tasks.get(i) {
+                self.db.delete_task(&task.id)?;
+                self.refresh_state()?;
+
+                // Adjust selection
+                if self.tasks.is_empty() {
+                    self.list_state.select(None);
+                } else if i >= self.tasks.len() {
+                    self.list_state.select(Some(self.tasks.len() - 1));
+                } else {
                     self.list_state.select(Some(i));
                 }
             }

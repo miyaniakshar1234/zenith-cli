@@ -126,6 +126,12 @@ impl Database {
         Ok(())
     }
 
+    pub fn delete_task(&self, id: &str) -> Result<()> {
+        self.conn
+            .execute("DELETE FROM tasks WHERE id = ?1", params![id])?;
+        Ok(())
+    }
+
     pub fn get_user_profile(&self) -> Result<UserProfile> {
         let mut stmt = self.conn.prepare(
             "SELECT id, level, current_xp, next_level_xp FROM user_profile WHERE id = 1",

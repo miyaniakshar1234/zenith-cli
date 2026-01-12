@@ -16,14 +16,33 @@
 
 **Zenith** is a futuristic, cyberpunk-styled terminal task manager built in Rust. It combines professional productivity tools with RPG-like gamification to make getting things done satisfying.
 
-## 🚀 Features Roadmap
+## 🚀 Features Implemented
 
-- [ ] **Core Architecture** (MVVM Pattern, SQLite DB)
-- [ ] **Modern TUI** (Ratatui engine, Cyberpunk Theme)
-- [ ] **Kanban Board** (Drag & Drop tasks between columns)
-- [ ] **Focus Mode** (Pomodoro Timer & Distraction-free view)
-- [ ] **RPG System** (Gain XP, Level Up, Streaks)
-- [ ] **Analytics** (Productivity graphs & History)
+- [x] **Cyberpunk TUI**: A beautiful, neon-styled interface powered by Ratatui.
+- [x] **Kanban Board**: Visualize your workflow with interactive Todo / Doing / Done columns.
+- [x] **Focus Mode**: Built-in Pomodoro timer to maintain flow state.
+- [x] **RPG System**: Earn XP for every task, track your level, and gamify your life.
+- [x] **Solid Architecture**: Built on `MVVM` pattern with `SQLite` persistence.
+
+## 🎮 Controls
+
+### Global
+- `TAB`: Switch between **Dashboard**, **Kanban**, and **Focus** views.
+- `q`: Quit application.
+
+### Dashboard View
+- `n`: Create a new task.
+- `SPACE`: Toggle task status (Todo -> Doing -> Done).
+- `d`: Delete selected task.
+- `j` / `k`: Navigate the list.
+
+### Kanban View
+- `h` / `l`: Move focus between columns.
+- `j` / `k`: Navigate tasks within a column.
+
+### Focus View
+- `t`: Start / Pause the Pomodoro timer.
+- `r`: Reset the timer.
 
 ## 🛠️ Tech Stack
 
@@ -31,6 +50,7 @@
 - **UI Engine:** Ratatui + Crossterm
 - **Database:** SQLite (Rusqlite)
 - **Error Handling:** Color-Eyre
+- **Architecture:** MVVM + Domain Driven Design
 
 ## 📦 Installation
 

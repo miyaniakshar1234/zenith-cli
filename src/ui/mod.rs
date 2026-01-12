@@ -106,7 +106,7 @@ fn draw_footer(f: &mut Frame, app: &App, area: Rect) {
                     "TAB: Switch View | h/l: Change Col | j/k: Nav | n: New Task"
                 }
                 CurrentView::Focus => "TAB: Switch View | t: Toggle Timer | r: Reset",
-                _ => "TAB: Switch View | n: New Task | SPC: Toggle Status | j/k: Nav",
+                _ => "TAB: Switch View | n: New Task | SPC: Toggle | d: Delete | j/k: Nav",
             };
 
             let p = Paragraph::new(help_text)
