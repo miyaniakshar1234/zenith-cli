@@ -10,7 +10,9 @@
     "binaries"
   ],
   "scripts": {
-    "build": "tsc"
+    "build": "tsc",
+    "prepare": "npm run build",
+    "postinstall": "node dist/install.js"
   },
   "devDependencies": {
     "@types/node": "^20.11.0",
