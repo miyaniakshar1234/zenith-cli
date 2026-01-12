@@ -28,7 +28,7 @@ case "$ARCH" in
         ARCH_TYPE="amd64"
         ;;
     arm64|aarch64)
-        ARCH_TYPE="amd64" # Fallback/Rosetta for now as we only release amd64
+        ARCH_TYPE="amd64" # Fallback/Rosetta for now
         ;;
     *)
         echo "Unsupported Architecture: $ARCH"
@@ -60,20 +60,24 @@ elif [ -f "$HOME/.bashrc" ]; then
     SHELL_CONFIG="$HOME/.bashrc"
 elif [ -f "$HOME/.bash_profile" ]; then
     SHELL_CONFIG="$HOME/.bash_profile"
+else
+    # Fallback creation
+    if [[ "$SHELL" == *"zsh"* ]]; then
+        SHELL_CONFIG="$HOME/.zshrc"
+    else
+        SHELL_CONFIG="$HOME/.bashrc"
+    fi
+    touch "$SHELL_CONFIG"
+    echo "ℹ️  Created shell config: $SHELL_CONFIG"
 fi
 
 if [[ ":$PATH:" != *":$INSTALL_DIR:"* ]]; then
     echo "🔧 Adding to PATH..."
-    if [ -n "$SHELL_CONFIG" ]; then
-        echo "" >> "$SHELL_CONFIG"
-        echo "# Zenith CLI" >> "$SHELL_CONFIG"
-        echo "export PATH=\"\$PATH:$INSTALL_DIR\"" >> "$SHELL_CONFIG"
-        echo "✅ Added to $SHELL_CONFIG"
-        echo "👉 Run 'source $SHELL_CONFIG' or restart terminal to use it."
-    else
-        echo "⚠️  Could not detect shell config. Run this manually:"
-        echo "   export PATH=\"\$PATH:$INSTALL_DIR\""
-    fi
+    echo "" >> "$SHELL_CONFIG"
+    echo "# Zenith CLI" >> "$SHELL_CONFIG"
+    echo "export PATH=\"\$PATH:$INSTALL_DIR\"" >> "$SHELL_CONFIG"
+    echo "✅ Added to $SHELL_CONFIG"
+    echo "👉 Run 'source $SHELL_CONFIG' or restart terminal to use it."
 else
     echo "🎉 Path is already correct."
 fi

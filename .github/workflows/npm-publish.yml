@@ -16,23 +16,29 @@ jobs:
           node-version: '20'
           registry-url: 'https://registry.npmjs.org'
 
-      # Download binaries built by the Release workflow
-      # Note: In a real scenario, we'd need to wait for build or download from assets.
-      # For simplicity, we assume this runs after assets are ready, or we rebuild.
-      # Rebuilding is safer for "bundling".
-      
       - name: Install Rust
         uses: dtolnay/rust-toolchain@stable
 
-      - name: Build Linux Binary
+      # Build binaries for all platforms to bundle
+      # Linux
+      - name: Build Linux
         run: |
           cargo build --release --target x86_64-unknown-linux-gnu
           mkdir -p npm/dist/linux-amd64
           cp target/x86_64-unknown-linux-gnu/release/zenith-cli npm/dist/linux-amd64/
 
-      # Cross-compilation in GitHub Actions for Windows/Mac to bundle in NPM
-      # (Simplified: Just building Linux for this demo to save time, 
-      # but in prod you'd download artifacts from the Release workflow)
+      # Windows (Cross-compile)
+      - name: Build Windows
+        run: |
+          sudo apt-get install -y mingw-w64
+          rustup target add x86_64-pc-windows-gnu
+          cargo build --release --target x86_64-pc-windows-gnu
+          mkdir -p npm/dist/windows-amd64
+          cp target/x86_64-pc-windows-gnu/release/zenith-cli.exe npm/dist/windows-amd64/
+
+      # Mac (Skip cross-compile complexity, maybe just use Linux artifact or skip for now)
+      # Cross-compiling Mac from Linux is hard. We will skip bundling Mac for now in NPM wrapper 
+      # or rely on downloading from GitHub Releases in install.js script (fallback).
       
       - name: Publish to NPM
         run: |
