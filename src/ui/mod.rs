@@ -1,10 +1,10 @@
 use crate::app::{App, CurrentView, InputMode};
-use crate::ui::theme::NEBULA;
+use crate::ui::theme::HORIZON;
 use ratatui::{
     layout::{Constraint, Direction, Layout, Rect},
     style::{Modifier, Style},
     text::{Line, Span},
-    widgets::{Block, BorderType, Borders, Clear, List, ListItem, Paragraph},
+    widgets::{Block, BorderType, Borders, Clear, Paragraph, Tabs},
     Frame,
 };
 
@@ -16,163 +16,125 @@ mod kanban;
 pub mod theme;
 
 pub fn draw(f: &mut Frame, app: &mut App) {
-    // 1. Main Layout (Sidebar | Content)
-    let main_layout = Layout::default()
-        .direction(Direction::Horizontal)
+    // 1. Background
+    let bg_block = Block::default().style(Style::default().bg(HORIZON.bg));
+    f.render_widget(bg_block, f.area());
+
+    // 2. Main Layout (Header | Content | Footer)
+    let layout = Layout::default()
+        .direction(Direction::Vertical)
         .constraints(
             [
-                Constraint::Length(22), // Sidebar Width
-                Constraint::Min(0),     // Content Area
+                Constraint::Length(3), // Header + Tabs
+                Constraint::Min(0),    // Main Content
+                Constraint::Length(1), // Footer / Status
             ]
             .as_ref(),
         )
         .split(f.area());
 
-    // 2. Sidebar & Content
-    draw_sidebar(f, app, main_layout[0]);
-
-    // Content Wrapper (Header + View + Status Bar)
-    let content_layout = Layout::default()
-        .direction(Direction::Vertical)
-        .constraints(
-            [
-                Constraint::Length(3), // Header
-                Constraint::Min(0),    // View
-                Constraint::Length(1), // Status Bar
-            ]
-            .as_ref(),
-        )
-        .split(main_layout[1]);
-
-    draw_header(f, app, content_layout[0]);
+    draw_header_tabs(f, app, layout[0]);
 
     // Dispatch View
+    let content_area = layout[1];
     match app.current_view {
-        CurrentView::Dashboard => dashboard::draw(f, app, content_layout[1]),
-        CurrentView::Kanban => kanban::draw(f, app, content_layout[1]),
-        CurrentView::Focus => focus::draw(f, app, content_layout[1]),
-        CurrentView::Analytics => analytics::draw(f, app, content_layout[1]),
+        CurrentView::Dashboard => dashboard::draw(f, app, content_area),
+        CurrentView::Kanban => kanban::draw(f, app, content_area),
+        CurrentView::Focus => focus::draw(f, app, content_area),
+        CurrentView::Analytics => analytics::draw(f, app, content_area),
     }
 
-    draw_status_bar(f, app, content_layout[2]);
+    draw_status_bar(f, app, layout[2]);
 
     // 3. Modals (Overlays)
     if app.input_mode == InputMode::Editing {
         draw_input_modal(f, app);
     }
 
-    // 4. Inspector Modal
-    if app.is_inspecting {
+    // Note: Inspector is now embedded in Dashboard (Master-Detail),
+    // but we keep the modal inspector logic if needed for other views or deep focus.
+    // For this design, we disable the modal inspector in Dashboard view
+    // because it's shown on the right.
+    if app.is_inspecting && app.current_view != CurrentView::Dashboard {
         inspector::draw(f, app);
     }
 }
 
-fn draw_sidebar(f: &mut Frame, app: &App, area: Rect) {
-    let items = vec![
-        ListItem::new("   DASHBOARD"),
-        ListItem::new("   KANBAN"),
-        ListItem::new("   FOCUS"),
-        ListItem::new("   STATS"),
-    ];
-
-    let current_idx = match app.current_view {
-        CurrentView::Dashboard => 0,
-        CurrentView::Kanban => 1,
-        CurrentView::Focus => 2,
-        CurrentView::Analytics => 3,
-    };
-
-    let nav = List::new(items)
-        .block(
-            Block::default()
-                .borders(Borders::RIGHT)
-                .style(Style::default().bg(NEBULA.bg))
-                .border_style(Style::default().fg(NEBULA.border)),
-        )
-        .highlight_style(
-            Style::default()
-                .bg(NEBULA.selection_bg)
-                .fg(NEBULA.accent_primary)
-                .add_modifier(Modifier::BOLD),
-        )
-        .highlight_symbol("▎");
-
-    let mut state = ratatui::widgets::ListState::default();
-    state.select(Some(current_idx));
-
-    f.render_stateful_widget(nav, area, &mut state);
-}
-
-fn draw_header(f: &mut Frame, app: &App, area: Rect) {
+fn draw_header_tabs(f: &mut Frame, app: &App, area: Rect) {
     let chunks = Layout::default()
         .direction(Direction::Horizontal)
-        .constraints([Constraint::Min(0), Constraint::Length(25)].as_ref())
+        .constraints(
+            [
+                Constraint::Length(20),
+                Constraint::Min(0),
+                Constraint::Length(30),
+            ]
+            .as_ref(),
+        )
         .split(area);
 
-    let page_title = match app.current_view {
-        CurrentView::Dashboard => "COMMAND CENTER",
-        CurrentView::Kanban => "WORKFLOW OPS",
-        CurrentView::Focus => "DEEP DIVE",
-        CurrentView::Analytics => "METRICS",
-    };
-
-    let title = Paragraph::new(Line::from(vec![
-        Span::styled(
-            " ZENITH ",
-            Style::default()
-                .fg(NEBULA.bg)
-                .bg(NEBULA.accent_primary)
-                .add_modifier(Modifier::BOLD),
-        ),
-        Span::styled(" ", Style::default().bg(NEBULA.bg)),
-        Span::styled(
-            page_title,
-            Style::default()
-                .fg(NEBULA.accent_secondary)
-                .add_modifier(Modifier::BOLD),
-        ),
-        if !app.search_query.is_empty() || app.input_mode == InputMode::Search {
-            Span::styled(
-                format!("  {}_", app.search_query),
-                Style::default().fg(NEBULA.warning),
-            )
-        } else {
-            Span::raw("")
-        },
-    ]))
+    // Logo
+    let logo = Paragraph::new(Span::styled(
+        " ZENITH ",
+        Style::default()
+            .fg(HORIZON.bg)
+            .bg(HORIZON.accent)
+            .add_modifier(Modifier::BOLD),
+    ))
     .block(
         Block::default()
             .borders(Borders::BOTTOM)
-            .border_style(Style::default().fg(NEBULA.border)),
+            .border_style(Style::default().fg(HORIZON.border)),
     );
+    f.render_widget(logo, chunks[0]);
 
-    f.render_widget(title, chunks[0]);
+    // Tabs
+    let titles = vec![" DASHBOARD ", " KANBAN ", " FOCUS ", " ANALYTICS "];
+    let tabs = Tabs::new(titles)
+        .block(
+            Block::default()
+                .borders(Borders::BOTTOM)
+                .border_style(Style::default().fg(HORIZON.border)),
+        )
+        .highlight_style(
+            Style::default()
+                .fg(HORIZON.accent)
+                .add_modifier(Modifier::BOLD),
+        )
+        .style(Style::default().fg(HORIZON.dimmed))
+        .select(match app.current_view {
+            CurrentView::Dashboard => 0,
+            CurrentView::Kanban => 1,
+            CurrentView::Focus => 2,
+            CurrentView::Analytics => 3,
+        });
+    f.render_widget(tabs, chunks[1]);
 
+    // HUD Stats
     let profile = &app.user_profile;
-    let stats = Paragraph::new(format!(
-        "Lvl {} • {} XP ",
-        profile.level, profile.current_xp
+    let stats_text = format!(" LVL {} | XP {} ", profile.level, profile.current_xp);
+    let stats = Paragraph::new(Span::styled(
+        stats_text,
+        Style::default().fg(HORIZON.secondary),
     ))
-    .style(Style::default().fg(NEBULA.inactive))
     .alignment(ratatui::layout::Alignment::Right)
     .block(
         Block::default()
             .borders(Borders::BOTTOM)
-            .border_style(Style::default().fg(NEBULA.border)),
+            .border_style(Style::default().fg(HORIZON.border)),
     );
-
-    f.render_widget(stats, chunks[1]);
+    f.render_widget(stats, chunks[2]);
 }
 
 fn draw_status_bar(f: &mut Frame, app: &App, area: Rect) {
     let (mode_str, mode_color) = match app.input_mode {
-        InputMode::Normal => (" NORMAL ", NEBULA.accent_primary),
-        InputMode::Editing => (" INSERT ", NEBULA.success),
-        InputMode::Search => (" SEARCH ", NEBULA.warning),
+        InputMode::Normal => (" NORMAL ", HORIZON.accent),
+        InputMode::Editing => (" INSERT ", HORIZON.success),
+        InputMode::Search => (" SEARCH ", HORIZON.warning),
     };
 
     let hints = match app.current_view {
-        CurrentView::Dashboard => "n: New • e: Edit • d: Delete • SPC: Complete • Enter: Inspect",
+        CurrentView::Dashboard => "n: New • e: Edit • d: Delete • SPC: Complete • /: Search",
         CurrentView::Kanban => "h/l: Col • j/k: Task",
         CurrentView::Focus => "t: Start/Stop • r: Reset",
         CurrentView::Analytics => "Visual Stats",
@@ -183,19 +145,28 @@ fn draw_status_bar(f: &mut Frame, app: &App, area: Rect) {
             mode_str,
             Style::default()
                 .bg(mode_color)
-                .fg(NEBULA.bg)
+                .fg(HORIZON.bg)
                 .add_modifier(Modifier::BOLD),
         ),
         Span::raw(" "),
-        Span::styled(hints, Style::default().fg(NEBULA.inactive)),
+        Span::styled(hints, Style::default().fg(HORIZON.dimmed)),
+        Span::raw(" "),
+        if !app.search_query.is_empty() {
+            Span::styled(
+                format!(" {}", app.search_query),
+                Style::default().fg(HORIZON.warning),
+            )
+        } else {
+            Span::raw("")
+        },
     ]))
-    .style(Style::default().bg(NEBULA.bg));
+    .style(Style::default().bg(HORIZON.surface));
 
     f.render_widget(status, area);
 }
 
 fn draw_input_modal(f: &mut Frame, app: &mut App) {
-    let area = centered_rect(50, 20, f.area());
+    let area = centered_rect(50, 25, f.area());
     f.render_widget(Clear, area);
 
     let title = if app.editing_task_id.is_some() {
@@ -207,13 +178,19 @@ fn draw_input_modal(f: &mut Frame, app: &mut App) {
     app.textarea.set_block(
         Block::default()
             .borders(Borders::ALL)
-            .border_type(BorderType::Double)
-            .border_style(Style::default().fg(NEBULA.accent_secondary))
-            .title(title),
+            .border_type(BorderType::Rounded)
+            .border_style(Style::default().fg(HORIZON.accent))
+            .title(title)
+            .title_style(
+                Style::default()
+                    .fg(HORIZON.accent)
+                    .add_modifier(Modifier::BOLD),
+            )
+            .style(Style::default().bg(HORIZON.surface)),
     );
-    app.textarea.set_style(Style::default().fg(NEBULA.fg));
+    app.textarea.set_style(Style::default().fg(HORIZON.fg));
     app.textarea
-        .set_cursor_style(Style::default().bg(NEBULA.accent_secondary));
+        .set_cursor_style(Style::default().bg(HORIZON.accent).fg(HORIZON.bg));
 
     f.render_widget(&app.textarea, area);
 }

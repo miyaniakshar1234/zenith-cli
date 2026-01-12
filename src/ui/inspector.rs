@@ -1,5 +1,5 @@
 use crate::app::App;
-use crate::ui::theme::NEBULA;
+use crate::ui::theme::HORIZON;
 use ratatui::{
     layout::{Constraint, Direction, Layout, Rect},
     style::{Modifier, Style},
@@ -27,8 +27,8 @@ pub fn draw(f: &mut Frame, app: &App) {
         .borders(Borders::ALL)
         .border_type(BorderType::Double)
         .title(" INSPECTOR ")
-        .style(Style::default().bg(NEBULA.bg).fg(NEBULA.fg))
-        .border_style(Style::default().fg(NEBULA.accent_secondary));
+        .style(Style::default().bg(HORIZON.bg).fg(HORIZON.fg))
+        .border_style(Style::default().fg(HORIZON.accent));
 
     let inner_area = block.inner(area);
     f.render_widget(block, area);
@@ -52,7 +52,7 @@ pub fn draw(f: &mut Frame, app: &App) {
         &task.title,
         Style::default()
             .add_modifier(Modifier::BOLD)
-            .fg(NEBULA.accent_primary),
+            .fg(HORIZON.accent),
     ));
     f.render_widget(title, chunks[0]);
 
@@ -64,7 +64,7 @@ pub fn draw(f: &mut Frame, app: &App) {
         task.xp_reward,
         task.created_at.format("%Y-%m-%d %H:%M")
     );
-    let metadata = Paragraph::new(Span::styled(meta, Style::default().fg(NEBULA.inactive)));
+    let metadata = Paragraph::new(Span::styled(meta, Style::default().fg(HORIZON.dimmed)));
     f.render_widget(metadata, chunks[2]);
 
     // 3. Description
@@ -76,7 +76,7 @@ pub fn draw(f: &mut Frame, app: &App) {
 
     let description = Paragraph::new(desc_text)
         .wrap(Wrap { trim: true })
-        .style(Style::default().fg(NEBULA.fg));
+        .style(Style::default().fg(HORIZON.fg));
 
     f.render_widget(description, chunks[4]);
 }

@@ -1,5 +1,5 @@
 use crate::app::App;
-use crate::ui::theme::NEBULA;
+use crate::ui::theme::HORIZON;
 use ratatui::{
     layout::{Alignment, Constraint, Direction, Layout, Rect},
     style::{Modifier, Style},
@@ -12,9 +12,9 @@ pub fn draw(f: &mut Frame, app: &mut App, area: Rect) {
         .direction(Direction::Vertical)
         .constraints(
             [
-                Constraint::Percentage(20),
-                Constraint::Percentage(60),
-                Constraint::Percentage(20),
+                Constraint::Percentage(30),
+                Constraint::Percentage(40),
+                Constraint::Percentage(30),
             ]
             .as_ref(),
         )
@@ -25,7 +25,8 @@ pub fn draw(f: &mut Frame, app: &mut App, area: Rect) {
         .constraints(
             [
                 Constraint::Length(4), // Timer
-                Constraint::Length(2), // Bar
+                Constraint::Length(1), // Spacer
+                Constraint::Length(1), // Bar
             ]
             .as_ref(),
         )
@@ -36,13 +37,13 @@ pub fn draw(f: &mut Frame, app: &mut App, area: Rect) {
     let time_str = format!("{:02}:{:02}", remaining / 60, remaining % 60);
 
     let timer = Paragraph::new(time_str)
-        .style(Style::default().fg(NEBULA.fg).add_modifier(Modifier::BOLD))
+        .style(Style::default().fg(HORIZON.fg).add_modifier(Modifier::BOLD)) // Removed font size logic for cleanliness
         .alignment(Alignment::Center)
         .block(
             Block::default()
                 .borders(Borders::ALL)
                 .border_type(BorderType::Rounded)
-                .border_style(Style::default().fg(NEBULA.accent_primary)),
+                .border_style(Style::default().fg(HORIZON.accent)),
         );
 
     f.render_widget(timer, chunks[0]);
@@ -55,8 +56,9 @@ pub fn draw(f: &mut Frame, app: &mut App, area: Rect) {
     };
 
     let gauge = Gauge::default()
-        .gauge_style(Style::default().fg(NEBULA.success))
-        .ratio(ratio);
+        .gauge_style(Style::default().fg(HORIZON.success))
+        .ratio(ratio)
+        .use_unicode(true);
 
-    f.render_widget(gauge, chunks[1]);
+    f.render_widget(gauge, chunks[2]);
 }

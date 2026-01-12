@@ -1,5 +1,5 @@
 use crate::app::App;
-use crate::ui::theme::NEBULA;
+use crate::ui::theme::HORIZON;
 use ratatui::{
     layout::{Constraint, Direction, Layout, Rect},
     style::{Modifier, Style},
@@ -27,13 +27,13 @@ pub fn draw(f: &mut Frame, app: &App, area: Rect) {
     let summary = Paragraph::new(Span::styled(
         summary_text,
         Style::default()
-            .fg(NEBULA.accent_secondary)
+            .fg(HORIZON.accent)
             .add_modifier(Modifier::BOLD),
     ))
     .block(
         Block::default()
             .borders(Borders::ALL)
-            .border_style(Style::default().fg(NEBULA.border)),
+            .border_style(Style::default().fg(HORIZON.border)),
     );
 
     f.render_widget(summary, chunks[0]);
@@ -56,13 +56,13 @@ pub fn draw(f: &mut Frame, app: &App, area: Rect) {
             Block::default()
                 .title("Velocity")
                 .borders(Borders::ALL)
-                .border_style(Style::default().fg(NEBULA.border)),
+                .border_style(Style::default().fg(HORIZON.border)),
         )
         .data(&bar_data)
         .bar_width(8)
         .bar_gap(3)
-        .bar_style(Style::default().fg(NEBULA.accent_primary))
-        .value_style(Style::default().fg(NEBULA.fg).add_modifier(Modifier::BOLD));
+        .bar_style(Style::default().fg(HORIZON.secondary))
+        .value_style(Style::default().fg(HORIZON.fg).add_modifier(Modifier::BOLD));
 
     f.render_widget(barchart, chunks[1]);
 }

@@ -3,32 +3,30 @@ use ratatui::style::Color;
 #[allow(dead_code)]
 pub struct Theme {
     pub bg: Color,
+    pub surface: Color, // Slightly lighter bg for panels
     pub fg: Color,
     pub selection_bg: Color,
     pub selection_fg: Color,
-    pub accent_primary: Color,
-    pub accent_secondary: Color,
+    pub accent: Color,    // Main action color (Gold)
+    pub secondary: Color, // Secondary info (Blue/Purple)
     pub border: Color,
     pub success: Color,
     pub warning: Color,
     pub error: Color,
-    pub inactive: Color,
-    pub header_bg: Color,
-    pub header_fg: Color,
+    pub dimmed: Color,
 }
 
-pub const NEBULA: Theme = Theme {
-    bg: Color::Rgb(20, 20, 30),                // Deep Space
-    fg: Color::Rgb(220, 220, 240),             // Star White
-    selection_bg: Color::Rgb(60, 20, 80),      // Deep Purple Selection
-    selection_fg: Color::Rgb(255, 0, 255),     // Neon Magenta Text
-    accent_primary: Color::Rgb(0, 240, 255),   // Electric Cyan
-    accent_secondary: Color::Rgb(255, 0, 120), // Hot Pink
-    border: Color::Rgb(80, 80, 120),           // Nebula Blue Border
-    success: Color::Rgb(50, 255, 100),         // Kryptonite Green
-    warning: Color::Rgb(255, 180, 0),          // Solar Flare Orange
-    error: Color::Rgb(255, 50, 50),            // Supernova Red
-    inactive: Color::Rgb(80, 80, 100),         // Stardust Grey
-    header_bg: Color::Rgb(40, 30, 60),         // Header Gradient Base
-    header_fg: Color::Rgb(0, 240, 255),        // Header Text
+pub const HORIZON: Theme = Theme {
+    bg: Color::Rgb(28, 30, 38),              // Deep Void
+    surface: Color::Rgb(45, 45, 55),         // Panel Background
+    fg: Color::Rgb(224, 224, 224),           // Clean White
+    selection_bg: Color::Rgb(225, 178, 105), // Horizon Gold (Selection)
+    selection_fg: Color::Rgb(28, 30, 38),    // Dark Text on Gold
+    accent: Color::Rgb(225, 178, 105),       // Horizon Gold
+    secondary: Color::Rgb(173, 169, 255),    // Soft Lavender
+    border: Color::Rgb(60, 60, 75),          // Subtle Border
+    success: Color::Rgb(163, 235, 163),      // Soft Green
+    warning: Color::Rgb(235, 203, 139),      // Soft Yellow
+    error: Color::Rgb(235, 135, 135),        // Soft Red
+    dimmed: Color::Rgb(100, 100, 115),       // Dimmed Text
 };
