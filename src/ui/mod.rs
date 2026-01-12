@@ -10,6 +10,7 @@ use ratatui::{
 
 mod dashboard;
 mod focus;
+mod inspector;
 mod kanban;
 pub mod theme;
 
@@ -56,6 +57,11 @@ pub fn draw(f: &mut Frame, app: &mut App) {
     // 3. Modals (Overlays)
     if app.input_mode == InputMode::Editing {
         draw_input_modal(f, app);
+    }
+
+    // 4. Inspector Modal
+    if app.is_inspecting {
+        inspector::draw(f, app);
     }
 }
 

@@ -95,6 +95,14 @@ fn run_app<B: ratatui::backend::Backend>(
                                 eprintln!("Error deleting task: {}", e);
                             }
                         }
+                        KeyCode::Enter => {
+                            app.toggle_inspector();
+                        }
+                        KeyCode::Esc => {
+                            if app.is_inspecting {
+                                app.toggle_inspector();
+                            }
+                        }
                         _ => {}
                     },
                     InputMode::Editing => match key.code {

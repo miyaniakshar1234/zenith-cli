@@ -71,6 +71,7 @@ pub struct App<'a> {
     pub current_view: CurrentView,
     pub focus_state: FocusState,
     pub kanban_state: KanbanState,
+    pub is_inspecting: bool,
 }
 
 impl<'a> App<'a> {
@@ -84,7 +85,7 @@ impl<'a> App<'a> {
         }
 
         let mut textarea = TextArea::default();
-        textarea.set_placeholder_text("Type task description...");
+        textarea.set_placeholder_text("Title (Line 1)\nDescription (Line 2+)...");
 
         Ok(Self {
             db,
@@ -96,6 +97,7 @@ impl<'a> App<'a> {
             current_view: CurrentView::Dashboard,
             focus_state: FocusState::default(),
             kanban_state: KanbanState::default(),
+            is_inspecting: false,
         })
     }
 
@@ -112,23 +114,34 @@ impl<'a> App<'a> {
     }
 
     pub fn add_task(&mut self) -> Result<()> {
-        let content = self.textarea.lines().join("\n");
-        if content.trim().is_empty() {
+        let lines = self.textarea.lines();
+        if lines.is_empty() || lines[0].trim().is_empty() {
             return Ok(());
         }
-        // Split title and description? For now, just title
-        let title = content.lines().next().unwrap_or("").to_string();
 
-        let task = Task::new(title, String::new(), 10);
+        let title = lines[0].trim().to_string();
+        let description = if lines.len() > 1 {
+            lines[1..].join("\n").trim().to_string()
+        } else {
+            String::new()
+        };
+
+        let task = Task::new(title, description, 10);
         self.db.create_task(&task)?;
 
         // Reset textarea
         self.textarea = TextArea::default();
         self.textarea
-            .set_placeholder_text("Type task description...");
+            .set_placeholder_text("Title (Line 1)\nDescription (Line 2+)...");
 
         self.refresh_state()?;
         Ok(())
+    }
+
+    pub fn toggle_inspector(&mut self) {
+        if self.current_view == CurrentView::Dashboard && !self.tasks.is_empty() {
+            self.is_inspecting = !self.is_inspecting;
+        }
     }
 
     // Navigation Logic
