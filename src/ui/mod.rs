@@ -1,12 +1,15 @@
-use crate::app::{App, InputMode};
-use crate::db::models::TaskStatus;
+use crate::app::{App, CurrentView, InputMode};
 use ratatui::{
     layout::{Constraint, Direction, Layout, Rect},
     style::{Color, Modifier, Style},
     text::{Line, Span},
-    widgets::{Block, Borders, Gauge, List, ListItem, Paragraph},
+    widgets::{Block, Borders, Gauge, Paragraph, Tabs},
     Frame,
 };
+
+mod dashboard;
+mod focus;
+mod kanban;
 
 pub fn draw(f: &mut Frame, app: &mut App) {
     let chunks = Layout::default()
@@ -14,17 +17,26 @@ pub fn draw(f: &mut Frame, app: &mut App) {
         .margin(1)
         .constraints(
             [
-                Constraint::Length(3), // Header (Level/XP)
-                Constraint::Min(0),    // Content (Tasks)
-                Constraint::Length(3), // Footer / Input
+                Constraint::Length(3), // Header
+                Constraint::Length(3), // Tabs
+                Constraint::Min(0),    // Content
+                Constraint::Length(3), // Footer
             ]
             .as_ref(),
         )
         .split(f.area());
 
     draw_header(f, app, chunks[0]);
-    draw_task_list(f, app, chunks[1]);
-    draw_input_area(f, app, chunks[2]);
+    draw_tabs(f, app, chunks[1]);
+
+    // Dispatch to views
+    match app.current_view {
+        CurrentView::Dashboard => dashboard::draw(f, app, chunks[2]),
+        CurrentView::Kanban => kanban::draw(f, app, chunks[2]),
+        CurrentView::Focus => focus::draw(f, app, chunks[2]),
+    }
+
+    draw_footer(f, app, chunks[3]);
 }
 
 fn draw_header(f: &mut Frame, app: &App, area: Rect) {
@@ -67,58 +79,40 @@ fn draw_header(f: &mut Frame, app: &App, area: Rect) {
     f.render_widget(gauge, chunks[1]);
 }
 
-fn draw_task_list(f: &mut Frame, app: &mut App, area: Rect) {
-    let tasks: Vec<ListItem> = app
-        .tasks
-        .iter()
-        .map(|task| {
-            let (status_icon, color) = match task.status {
-                TaskStatus::Todo => ("TODO ", Color::Red),
-                TaskStatus::Doing => ("DOING", Color::Yellow),
-                TaskStatus::Done => ("DONE ", Color::Green),
-            };
-
-            let content = Line::from(vec![
-                Span::styled(
-                    format!("[{}] ", status_icon),
-                    Style::default().fg(color).add_modifier(Modifier::BOLD),
-                ),
-                Span::styled(
-                    format!("{:<30}", &task.title),
-                    Style::default().fg(Color::White),
-                ),
-                Span::styled(
-                    format!(" ({} XP)", task.xp_reward),
-                    Style::default().fg(Color::DarkGray),
-                ),
-            ]);
-
-            ListItem::new(content)
-        })
-        .collect();
-
-    let tasks_list = List::new(tasks)
-        .block(Block::default().borders(Borders::ALL).title("Tasks"))
+fn draw_tabs(f: &mut Frame, app: &App, area: Rect) {
+    let titles = vec!["Dashboard", "Kanban", "Focus"];
+    let tabs = Tabs::new(titles)
+        .block(Block::default().borders(Borders::ALL).title("Views"))
         .highlight_style(
             Style::default()
-                .bg(Color::DarkGray)
+                .fg(Color::Yellow)
                 .add_modifier(Modifier::BOLD),
         )
-        .highlight_symbol(">> ");
-
-    f.render_stateful_widget(tasks_list, area, &mut app.list_state);
+        .select(match app.current_view {
+            CurrentView::Dashboard => 0,
+            CurrentView::Kanban => 1,
+            CurrentView::Focus => 2,
+        });
+    f.render_widget(tabs, area);
 }
 
-fn draw_input_area(f: &mut Frame, app: &App, area: Rect) {
+fn draw_footer(f: &mut Frame, app: &App, area: Rect) {
     let input_block = Block::default().borders(Borders::ALL).title("Input");
 
     match app.input_mode {
         InputMode::Normal => {
-            let help_text =
-                Paragraph::new("n: New Task | q: Quit | SPC: Toggle Status | j/k: Navigate")
-                    .style(Style::default().fg(Color::Gray))
-                    .block(input_block);
-            f.render_widget(help_text, area);
+            let help_text = match app.current_view {
+                CurrentView::Kanban => {
+                    "TAB: Switch View | h/l: Change Col | j/k: Nav | n: New Task"
+                }
+                CurrentView::Focus => "TAB: Switch View | t: Toggle Timer | r: Reset",
+                _ => "TAB: Switch View | n: New Task | SPC: Toggle Status | j/k: Nav",
+            };
+
+            let p = Paragraph::new(help_text)
+                .style(Style::default().fg(Color::Gray))
+                .block(input_block);
+            f.render_widget(p, area);
         }
         InputMode::Editing => {
             let input = Paragraph::new(app.input_buffer.as_str())

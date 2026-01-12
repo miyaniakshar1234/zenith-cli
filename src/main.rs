@@ -55,17 +55,32 @@ fn run_app<B: ratatui::backend::Backend>(
     loop {
         terminal.draw(|f| ui::draw(f, app))?;
 
+        // Handle Timer Tick
+        app.on_tick();
+
         if event::poll(Duration::from_millis(250))? {
             if let Event::Key(key) = event::read()? {
                 match app.input_mode {
                     InputMode::Normal => match key.code {
                         KeyCode::Char('q') => return Ok(()),
+                        KeyCode::Tab => app.cycle_view(),
                         KeyCode::Char('n') => app.input_mode = InputMode::Editing,
-                        KeyCode::Char('j') | KeyCode::Down => app.next_task(),
-                        KeyCode::Char('k') | KeyCode::Up => app.previous_task(),
+
+                        // Universal Navigation
+                        KeyCode::Char('j') | KeyCode::Down => app.next_item(),
+                        KeyCode::Char('k') | KeyCode::Up => app.previous_item(),
+
+                        // Kanban Specific
+                        KeyCode::Char('l') | KeyCode::Right => app.next_kanban_col(),
+                        KeyCode::Char('h') | KeyCode::Left => app.prev_kanban_col(),
+
+                        // Focus Specific
+                        KeyCode::Char('t') => app.toggle_timer(),
+                        KeyCode::Char('r') => app.reset_timer(),
+
+                        // Actions
                         KeyCode::Char(' ') => {
                             if let Err(e) = app.toggle_status() {
-                                // In a real app we would log this to a status bar
                                 eprintln!("Error toggling status: {}", e);
                             }
                         }
