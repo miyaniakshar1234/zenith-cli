@@ -1,5 +1,5 @@
 use crate::app::{App, CurrentView, InputMode};
-use crate::ui::theme::NORD_PRO;
+use crate::ui::theme::NEBULA;
 use ratatui::{
     layout::{Constraint, Direction, Layout, Rect},
     style::{Modifier, Style},
@@ -21,7 +21,7 @@ pub fn draw(f: &mut Frame, app: &mut App) {
         .direction(Direction::Horizontal)
         .constraints(
             [
-                Constraint::Length(20), // Sidebar Width
+                Constraint::Length(22), // Sidebar Width
                 Constraint::Min(0),     // Content Area
             ]
             .as_ref(),
@@ -69,10 +69,10 @@ pub fn draw(f: &mut Frame, app: &mut App) {
 
 fn draw_sidebar(f: &mut Frame, app: &App, area: Rect) {
     let items = vec![
-        ListItem::new("   Dashboard"),
-        ListItem::new("   Kanban Board"),
-        ListItem::new("   Focus Timer"),
-        ListItem::new("   Analytics"),
+        ListItem::new("   DASHBOARD"),
+        ListItem::new("   KANBAN"),
+        ListItem::new("   FOCUS"),
+        ListItem::new("   STATS"),
     ];
 
     let current_idx = match app.current_view {
@@ -86,18 +86,17 @@ fn draw_sidebar(f: &mut Frame, app: &App, area: Rect) {
         .block(
             Block::default()
                 .borders(Borders::RIGHT)
-                .style(Style::default().bg(NORD_PRO.bg))
-                .border_style(Style::default().fg(NORD_PRO.border)),
+                .style(Style::default().bg(NEBULA.bg))
+                .border_style(Style::default().fg(NEBULA.border)),
         )
         .highlight_style(
             Style::default()
-                .bg(NORD_PRO.selection_bg)
-                .fg(NORD_PRO.accent)
+                .bg(NEBULA.selection_bg)
+                .fg(NEBULA.accent_primary)
                 .add_modifier(Modifier::BOLD),
         )
-        .highlight_symbol("▎"); // Modern sidebar marker
+        .highlight_symbol("▎");
 
-    // We fake a ListState for the sidebar just to render the selection
     let mut state = ratatui::widgets::ListState::default();
     state.select(Some(current_idx));
 
@@ -110,33 +109,32 @@ fn draw_header(f: &mut Frame, app: &App, area: Rect) {
         .constraints([Constraint::Min(0), Constraint::Length(25)].as_ref())
         .split(area);
 
-    // Breadcrumb / Page Title
     let page_title = match app.current_view {
-        CurrentView::Dashboard => "DASHBOARD",
-        CurrentView::Kanban => "WORKFLOW / KANBAN",
-        CurrentView::Focus => "DEEP WORK / FOCUS",
-        CurrentView::Analytics => "STATS / ANALYTICS",
+        CurrentView::Dashboard => "COMMAND CENTER",
+        CurrentView::Kanban => "WORKFLOW OPS",
+        CurrentView::Focus => "DEEP DIVE",
+        CurrentView::Analytics => "METRICS",
     };
 
     let title = Paragraph::new(Line::from(vec![
         Span::styled(
             " ZENITH ",
             Style::default()
-                .fg(NORD_PRO.bg)
-                .bg(NORD_PRO.accent)
+                .fg(NEBULA.bg)
+                .bg(NEBULA.accent_primary)
                 .add_modifier(Modifier::BOLD),
         ),
-        Span::styled(" ", Style::default().bg(NORD_PRO.bg)),
+        Span::styled(" ", Style::default().bg(NEBULA.bg)),
         Span::styled(
             page_title,
             Style::default()
-                .fg(NORD_PRO.fg)
+                .fg(NEBULA.accent_secondary)
                 .add_modifier(Modifier::BOLD),
         ),
         if !app.search_query.is_empty() || app.input_mode == InputMode::Search {
             Span::styled(
                 format!("  {}_", app.search_query),
-                Style::default().fg(NORD_PRO.warning),
+                Style::default().fg(NEBULA.warning),
             )
         } else {
             Span::raw("")
@@ -145,23 +143,22 @@ fn draw_header(f: &mut Frame, app: &App, area: Rect) {
     .block(
         Block::default()
             .borders(Borders::BOTTOM)
-            .border_style(Style::default().fg(NORD_PRO.border)),
+            .border_style(Style::default().fg(NEBULA.border)),
     );
 
     f.render_widget(title, chunks[0]);
 
-    // Mini Stats
     let profile = &app.user_profile;
     let stats = Paragraph::new(format!(
         "Lvl {} • {} XP ",
         profile.level, profile.current_xp
     ))
-    .style(Style::default().fg(NORD_PRO.inactive))
+    .style(Style::default().fg(NEBULA.inactive))
     .alignment(ratatui::layout::Alignment::Right)
     .block(
         Block::default()
             .borders(Borders::BOTTOM)
-            .border_style(Style::default().fg(NORD_PRO.border)),
+            .border_style(Style::default().fg(NEBULA.border)),
     );
 
     f.render_widget(stats, chunks[1]);
@@ -169,9 +166,9 @@ fn draw_header(f: &mut Frame, app: &App, area: Rect) {
 
 fn draw_status_bar(f: &mut Frame, app: &App, area: Rect) {
     let (mode_str, mode_color) = match app.input_mode {
-        InputMode::Normal => (" NORMAL ", NORD_PRO.accent),
-        InputMode::Editing => (" INSERT ", NORD_PRO.success),
-        InputMode::Search => (" SEARCH ", NORD_PRO.warning),
+        InputMode::Normal => (" NORMAL ", NEBULA.accent_primary),
+        InputMode::Editing => (" INSERT ", NEBULA.success),
+        InputMode::Search => (" SEARCH ", NEBULA.warning),
     };
 
     let hints = match app.current_view {
@@ -186,13 +183,13 @@ fn draw_status_bar(f: &mut Frame, app: &App, area: Rect) {
             mode_str,
             Style::default()
                 .bg(mode_color)
-                .fg(NORD_PRO.bg)
+                .fg(NEBULA.bg)
                 .add_modifier(Modifier::BOLD),
         ),
         Span::raw(" "),
-        Span::styled(hints, Style::default().fg(NORD_PRO.inactive)),
+        Span::styled(hints, Style::default().fg(NEBULA.inactive)),
     ]))
-    .style(Style::default().bg(NORD_PRO.bg));
+    .style(Style::default().bg(NEBULA.bg));
 
     f.render_widget(status, area);
 }
@@ -210,13 +207,13 @@ fn draw_input_modal(f: &mut Frame, app: &mut App) {
     app.textarea.set_block(
         Block::default()
             .borders(Borders::ALL)
-            .border_type(BorderType::Thick)
-            .border_style(Style::default().fg(NORD_PRO.accent))
+            .border_type(BorderType::Double)
+            .border_style(Style::default().fg(NEBULA.accent_secondary))
             .title(title),
     );
-    app.textarea.set_style(Style::default().fg(NORD_PRO.fg));
+    app.textarea.set_style(Style::default().fg(NEBULA.fg));
     app.textarea
-        .set_cursor_style(Style::default().bg(NORD_PRO.accent));
+        .set_cursor_style(Style::default().bg(NEBULA.accent_secondary));
 
     f.render_widget(&app.textarea, area);
 }

@@ -10,7 +10,6 @@ description = "A high-performance, cyberpunk-styled CLI Task Manager & RPG."
 ratatui = "0.29.0"
 crossterm = "0.28.1"
 tui-big-text = "0.4.3"
-throbber-widgets-tui = "0.5"
 tui-textarea = "0.7.0"
 
 # The Logic Layer (Solid & Strong)

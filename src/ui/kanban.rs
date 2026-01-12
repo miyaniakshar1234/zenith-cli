@@ -1,11 +1,11 @@
 use crate::app::App;
 use crate::db::models::TaskStatus;
-use crate::ui::theme::NORD_PRO;
+use crate::ui::theme::NEBULA;
 use ratatui::{
     layout::{Constraint, Direction, Layout, Rect},
     style::{Modifier, Style},
     text::{Line, Span},
-    widgets::{Block, Borders, List, ListItem},
+    widgets::{Block, BorderType, Borders, List, ListItem},
     Frame,
 };
 
@@ -37,22 +37,35 @@ fn draw_col(f: &mut Frame, app: &mut App, area: Rect, status: TaskStatus, title:
 
     let is_focused = app.kanban_state.focused_col == idx;
     let border_color = if is_focused {
-        NORD_PRO.accent
+        NEBULA.accent_primary
     } else {
-        NORD_PRO.border
+        NEBULA.border
     };
 
     let block = Block::default()
         .borders(Borders::ALL)
+        .border_type(if is_focused {
+            BorderType::Thick
+        } else {
+            BorderType::Rounded
+        })
         .title(Span::styled(
             title,
-            Style::default().add_modifier(Modifier::BOLD),
+            Style::default()
+                .add_modifier(Modifier::BOLD)
+                .fg(if is_focused {
+                    NEBULA.accent_secondary
+                } else {
+                    NEBULA.inactive
+                }),
         ))
         .border_style(Style::default().fg(border_color));
 
-    let list = List::new(tasks)
-        .block(block)
-        .highlight_style(Style::default().bg(NORD_PRO.selection_bg));
+    let list = List::new(tasks).block(block).highlight_style(
+        Style::default()
+            .bg(NEBULA.selection_bg)
+            .fg(NEBULA.selection_fg),
+    );
 
     match idx {
         0 => f.render_stateful_widget(list, area, &mut app.kanban_state.todo_state),

@@ -1,5 +1,5 @@
 use crate::app::App;
-use crate::ui::theme::NORD_PRO;
+use crate::ui::theme::NEBULA;
 use ratatui::{
     layout::{Constraint, Direction, Layout, Rect},
     style::{Modifier, Style},
@@ -27,26 +27,16 @@ pub fn draw(f: &mut Frame, app: &App, area: Rect) {
     let summary = Paragraph::new(Span::styled(
         summary_text,
         Style::default()
-            .fg(NORD_PRO.accent)
+            .fg(NEBULA.accent_secondary)
             .add_modifier(Modifier::BOLD),
     ))
     .block(
         Block::default()
             .borders(Borders::ALL)
-            .border_style(Style::default().fg(NORD_PRO.border)),
+            .border_style(Style::default().fg(NEBULA.border)),
     );
 
     f.render_widget(summary, chunks[0]);
-
-    // Bar Chart
-    // Convert stats to specific format for BarChart
-    // Note: BarChart expects &str for label and u64 for value
-    // We need to construct owned strings in App if we want dynamic labels,
-    // but BarChart takes &str. We can format them on the fly if the vector is consistent.
-
-    // We'll take the stats from App (which are Vec<(String, u64)>)
-    // and format them for the chart. The string is YYYY-MM-DD.
-    // We'll just show MM-DD for space.
 
     let bar_data: Vec<(&str, u64)> = app
         .stats
@@ -64,18 +54,15 @@ pub fn draw(f: &mut Frame, app: &App, area: Rect) {
     let barchart = BarChart::default()
         .block(
             Block::default()
-                .title("Productivity Velocity")
-                .borders(Borders::ALL),
+                .title("Velocity")
+                .borders(Borders::ALL)
+                .border_style(Style::default().fg(NEBULA.border)),
         )
         .data(&bar_data)
         .bar_width(8)
         .bar_gap(3)
-        .bar_style(Style::default().fg(NORD_PRO.success))
-        .value_style(
-            Style::default()
-                .fg(NORD_PRO.fg)
-                .add_modifier(Modifier::BOLD),
-        );
+        .bar_style(Style::default().fg(NEBULA.accent_primary))
+        .value_style(Style::default().fg(NEBULA.fg).add_modifier(Modifier::BOLD));
 
     f.render_widget(barchart, chunks[1]);
 }

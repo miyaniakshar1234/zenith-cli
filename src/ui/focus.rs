@@ -1,9 +1,9 @@
 use crate::app::App;
-use crate::ui::theme::NORD_PRO;
+use crate::ui::theme::NEBULA;
 use ratatui::{
     layout::{Alignment, Constraint, Direction, Layout, Rect},
     style::{Modifier, Style},
-    widgets::{Block, Borders, Gauge, Paragraph},
+    widgets::{Block, BorderType, Borders, Gauge, Paragraph},
     Frame,
 };
 
@@ -12,9 +12,9 @@ pub fn draw(f: &mut Frame, app: &mut App, area: Rect) {
         .direction(Direction::Vertical)
         .constraints(
             [
-                Constraint::Percentage(30),
-                Constraint::Percentage(40),
-                Constraint::Percentage(30),
+                Constraint::Percentage(20),
+                Constraint::Percentage(60),
+                Constraint::Percentage(20),
             ]
             .as_ref(),
         )
@@ -22,23 +22,27 @@ pub fn draw(f: &mut Frame, app: &mut App, area: Rect) {
 
     let chunks = Layout::default()
         .direction(Direction::Vertical)
-        .constraints([Constraint::Length(4), Constraint::Length(2)].as_ref())
+        .constraints(
+            [
+                Constraint::Length(4), // Timer
+                Constraint::Length(2), // Bar
+            ]
+            .as_ref(),
+        )
         .split(center);
 
+    // Timer
     let remaining = app.focus_state.remaining_sec;
     let time_str = format!("{:02}:{:02}", remaining / 60, remaining % 60);
 
     let timer = Paragraph::new(time_str)
-        .style(
-            Style::default()
-                .fg(NORD_PRO.fg)
-                .add_modifier(Modifier::BOLD),
-        ) // Removed font size logic for now, keeping it clean
+        .style(Style::default().fg(NEBULA.fg).add_modifier(Modifier::BOLD))
         .alignment(Alignment::Center)
         .block(
             Block::default()
                 .borders(Borders::ALL)
-                .border_style(Style::default().fg(NORD_PRO.accent)),
+                .border_type(BorderType::Rounded)
+                .border_style(Style::default().fg(NEBULA.accent_primary)),
         );
 
     f.render_widget(timer, chunks[0]);
@@ -51,7 +55,7 @@ pub fn draw(f: &mut Frame, app: &mut App, area: Rect) {
     };
 
     let gauge = Gauge::default()
-        .gauge_style(Style::default().fg(NORD_PRO.accent))
+        .gauge_style(Style::default().fg(NEBULA.success))
         .ratio(ratio);
 
     f.render_widget(gauge, chunks[1]);

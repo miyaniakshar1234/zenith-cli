@@ -1,5 +1,5 @@
 use crate::app::App;
-use crate::ui::theme::NORD_PRO;
+use crate::ui::theme::NEBULA;
 use ratatui::{
     layout::{Constraint, Direction, Layout, Rect},
     style::{Modifier, Style},
@@ -13,7 +13,7 @@ pub fn draw(f: &mut Frame, app: &App) {
     f.render_widget(Clear, area);
 
     // Get selected task
-    let task = if let Some(i) = app.list_state.selected() {
+    let task = if let Some(i) = app.table_state.selected() {
         if let Some(t) = app.tasks.get(i) {
             t
         } else {
@@ -26,9 +26,9 @@ pub fn draw(f: &mut Frame, app: &App) {
     let block = Block::default()
         .borders(Borders::ALL)
         .border_type(BorderType::Double)
-        .title(" TASK INSPECTOR ")
-        .style(Style::default().bg(NORD_PRO.bg).fg(NORD_PRO.fg))
-        .border_style(Style::default().fg(NORD_PRO.accent));
+        .title(" INSPECTOR ")
+        .style(Style::default().bg(NEBULA.bg).fg(NEBULA.fg))
+        .border_style(Style::default().fg(NEBULA.accent_secondary));
 
     let inner_area = block.inner(area);
     f.render_widget(block, area);
@@ -52,7 +52,7 @@ pub fn draw(f: &mut Frame, app: &App) {
         &task.title,
         Style::default()
             .add_modifier(Modifier::BOLD)
-            .fg(NORD_PRO.accent),
+            .fg(NEBULA.accent_primary),
     ));
     f.render_widget(title, chunks[0]);
 
@@ -64,7 +64,7 @@ pub fn draw(f: &mut Frame, app: &App) {
         task.xp_reward,
         task.created_at.format("%Y-%m-%d %H:%M")
     );
-    let metadata = Paragraph::new(Span::styled(meta, Style::default().fg(NORD_PRO.inactive)));
+    let metadata = Paragraph::new(Span::styled(meta, Style::default().fg(NEBULA.inactive)));
     f.render_widget(metadata, chunks[2]);
 
     // 3. Description
@@ -76,7 +76,7 @@ pub fn draw(f: &mut Frame, app: &App) {
 
     let description = Paragraph::new(desc_text)
         .wrap(Wrap { trim: true })
-        .style(Style::default().fg(NORD_PRO.fg));
+        .style(Style::default().fg(NEBULA.fg));
 
     f.render_widget(description, chunks[4]);
 }

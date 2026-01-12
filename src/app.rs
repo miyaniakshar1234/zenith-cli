@@ -4,7 +4,7 @@ use crate::db::{
 };
 use chrono::{DateTime, Utc};
 use color_eyre::eyre::Result;
-use ratatui::widgets::ListState;
+use ratatui::widgets::{ListState, TableState};
 use tui_textarea::TextArea;
 
 #[derive(PartialEq)]
@@ -55,7 +55,6 @@ impl Default for KanbanState {
             done_state: ListState::default(),
             focused_col: 0,
         };
-        // Select first item by default for better UX
         s.todo_state.select(Some(0));
         s.doing_state.select(Some(0));
         s.done_state.select(Some(0));
@@ -69,7 +68,7 @@ pub struct App<'a> {
     pub user_profile: UserProfile,
     pub input_mode: InputMode,
     pub textarea: TextArea<'a>,
-    pub list_state: ListState,
+    pub table_state: TableState,
     pub current_view: CurrentView,
     pub focus_state: FocusState,
     pub kanban_state: KanbanState,
@@ -86,9 +85,9 @@ impl<'a> App<'a> {
         let user_profile = db.get_user_profile()?;
         let stats = db.get_weekly_stats()?;
 
-        let mut list_state = ListState::default();
+        let mut table_state = TableState::default();
         if !tasks.is_empty() {
-            list_state.select(Some(0));
+            table_state.select(Some(0));
         }
 
         let mut textarea = TextArea::default();
@@ -100,7 +99,7 @@ impl<'a> App<'a> {
             user_profile,
             input_mode: InputMode::Normal,
             textarea,
-            list_state,
+            table_state,
             current_view: CurrentView::Dashboard,
             focus_state: FocusState::default(),
             kanban_state: KanbanState::default(),
@@ -130,10 +129,10 @@ impl<'a> App<'a> {
         self.stats = self.db.get_weekly_stats()?;
 
         // Ensure selections remain valid
-        if self.list_state.selected().is_none() && !self.tasks.is_empty() {
-            self.list_state.select(Some(0));
-        } else if self.list_state.selected().unwrap_or(0) >= self.tasks.len() {
-            self.list_state
+        if self.table_state.selected().is_none() && !self.tasks.is_empty() {
+            self.table_state.select(Some(0));
+        } else if self.table_state.selected().unwrap_or(0) >= self.tasks.len() {
+            self.table_state
                 .select(Some(self.tasks.len().saturating_sub(1)));
         }
 
@@ -177,7 +176,7 @@ impl<'a> App<'a> {
             return;
         }
 
-        if let Some(i) = self.list_state.selected() {
+        if let Some(i) = self.table_state.selected() {
             if let Some(task) = self.tasks.get(i) {
                 self.editing_task_id = Some(task.id.clone());
 
@@ -221,7 +220,7 @@ impl<'a> App<'a> {
         if self.tasks.is_empty() {
             return;
         }
-        let i = match self.list_state.selected() {
+        let i = match self.table_state.selected() {
             Some(i) => {
                 if i >= self.tasks.len() - 1 {
                     0
@@ -231,14 +230,14 @@ impl<'a> App<'a> {
             }
             None => 0,
         };
-        self.list_state.select(Some(i));
+        self.table_state.select(Some(i));
     }
 
     fn previous_dashboard_task(&mut self) {
         if self.tasks.is_empty() {
             return;
         }
-        let i = match self.list_state.selected() {
+        let i = match self.table_state.selected() {
             Some(i) => {
                 if i == 0 {
                     self.tasks.len() - 1
@@ -248,7 +247,7 @@ impl<'a> App<'a> {
             }
             None => 0,
         };
-        self.list_state.select(Some(i));
+        self.table_state.select(Some(i));
     }
 
     // Kanban Navigation
@@ -341,12 +340,11 @@ impl<'a> App<'a> {
     }
 
     pub fn toggle_status(&mut self) -> Result<()> {
-        // Simplified: Only allow toggling from Dashboard for now to ensure ID safety
         if self.current_view != CurrentView::Dashboard {
             return Ok(());
         }
 
-        if let Some(i) = self.list_state.selected() {
+        if let Some(i) = self.table_state.selected() {
             if let Some(task) = self.tasks.get(i) {
                 let new_status = match task.status {
                     TaskStatus::Todo => TaskStatus::Doing,
@@ -361,7 +359,7 @@ impl<'a> App<'a> {
                 self.db.update_task_status(&task.id, new_status)?;
                 self.refresh_state()?;
                 if i < self.tasks.len() {
-                    self.list_state.select(Some(i));
+                    self.table_state.select(Some(i));
                 }
             }
         }
@@ -373,18 +371,17 @@ impl<'a> App<'a> {
             return Ok(());
         }
 
-        if let Some(i) = self.list_state.selected() {
+        if let Some(i) = self.table_state.selected() {
             if let Some(task) = self.tasks.get(i) {
                 self.db.delete_task(&task.id)?;
                 self.refresh_state()?;
 
-                // Adjust selection
                 if self.tasks.is_empty() {
-                    self.list_state.select(None);
+                    self.table_state.select(None);
                 } else if i >= self.tasks.len() {
-                    self.list_state.select(Some(self.tasks.len() - 1));
+                    self.table_state.select(Some(self.tasks.len() - 1));
                 } else {
-                    self.list_state.select(Some(i));
+                    self.table_state.select(Some(i));
                 }
             }
         }
@@ -418,7 +415,6 @@ impl<'a> App<'a> {
                     } else {
                         self.focus_state.remaining_sec = 0;
                         self.focus_state.is_running = false;
-                        // Optionally: Auto-add XP for finishing a pomodoro
                     }
                     self.focus_state.last_tick = Some(now);
                 }
