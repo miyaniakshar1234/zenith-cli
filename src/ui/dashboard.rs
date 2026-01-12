@@ -1,10 +1,10 @@
 use crate::app::App;
-use crate::db::models::TaskStatus;
+use crate::db::models::{TaskPriority, TaskStatus};
 use crate::ui::theme::HORIZON;
 use ratatui::{
     layout::{Constraint, Direction, Layout, Rect},
     style::{Modifier, Style},
-    text::Span,
+    text::{Line, Span},
     widgets::{Block, Borders, Cell, Paragraph, Row, Table, Wrap},
     Frame,
 };
@@ -54,14 +54,21 @@ fn draw_table(f: &mut Frame, app: &mut App, area: Rect) {
                 Style::default().fg(HORIZON.fg).add_modifier(Modifier::BOLD)
             };
 
+            // Priority Indicator
+            let priority_marker = match task.priority {
+                TaskPriority::High => " 🔴",
+                TaskPriority::Medium => " 🟡",
+                TaskPriority::Low => " 🔵",
+            };
+
             Row::new(vec![
                 Cell::from(format!("  {} ", icon)).style(Style::default().fg(color)),
-                Cell::from(task.title.clone()).style(title_style),
+                Cell::from(format!("{}{}", task.title, priority_marker)).style(title_style),
                 Cell::from(format!("{} XP", task.xp_reward))
                     .style(Style::default().fg(HORIZON.secondary)),
             ])
             .height(1)
-            .style(Style::default().bg(HORIZON.bg)) // Base row color
+            .style(Style::default().bg(HORIZON.bg))
         })
         .collect();
 
@@ -100,22 +107,20 @@ fn draw_table(f: &mut Frame, app: &mut App, area: Rect) {
 fn draw_preview(f: &mut Frame, app: &App, area: Rect) {
     let block = Block::default()
         .borders(Borders::NONE)
-        .style(Style::default().bg(HORIZON.surface)); // Slightly lighter background for detail
+        .style(Style::default().bg(HORIZON.surface));
     f.render_widget(block, area);
 
-    // Padding inside the preview
     let inner_area = Layout::default()
         .direction(Direction::Vertical)
         .constraints([Constraint::Min(0)].as_ref())
         .margin(2)
         .split(area)[0];
 
-    // Get selected task
     let task = if let Some(i) = app.table_state.selected() {
         if let Some(t) = app.tasks.get(i) {
             t
         } else {
-            return; // Should render empty state
+            return;
         }
     } else {
         return;
@@ -151,14 +156,29 @@ fn draw_preview(f: &mut Frame, app: &App, area: Rect) {
     ));
     f.render_widget(status_badge, chunks[0]);
 
-    // 2. Title
-    let title = Paragraph::new(task.title.as_str())
-        .style(
+    // 2. Title + Priority
+    let priority_text = match task.priority {
+        TaskPriority::High => "[HIGH] ",
+        TaskPriority::Medium => "",
+        TaskPriority::Low => "[LOW] ",
+    };
+
+    let title_line = Line::from(vec![
+        Span::styled(
+            priority_text,
+            Style::default()
+                .fg(HORIZON.error)
+                .add_modifier(Modifier::BOLD),
+        ),
+        Span::styled(
+            &task.title,
             Style::default()
                 .fg(HORIZON.accent)
                 .add_modifier(Modifier::BOLD),
-        )
-        .wrap(Wrap { trim: true });
+        ),
+    ]);
+
+    let title = Paragraph::new(title_line).wrap(Wrap { trim: true });
     f.render_widget(title, chunks[1]);
 
     // 3. Metadata

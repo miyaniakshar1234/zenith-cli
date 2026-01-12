@@ -68,6 +68,9 @@ fn run_app<B: ratatui::backend::Backend>(
 
                 match app.input_mode {
                     InputMode::Normal => match key.code {
+                        KeyCode::Char('?') => {
+                            app.show_help = !app.show_help;
+                        }
                         KeyCode::Char('q') => return Ok(()),
                         KeyCode::Tab => app.cycle_view(),
                         KeyCode::Char('n') => {

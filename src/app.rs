@@ -1,5 +1,5 @@
 use crate::db::{
-    models::{Task, TaskStatus, UserProfile},
+    models::{Task, TaskPriority, TaskStatus, UserProfile},
     Database,
 };
 use chrono::{DateTime, Utc};
@@ -55,6 +55,7 @@ impl Default for KanbanState {
             done_state: ListState::default(),
             focused_col: 0,
         };
+        // Select first item by default for better UX
         s.todo_state.select(Some(0));
         s.doing_state.select(Some(0));
         s.done_state.select(Some(0));
@@ -76,6 +77,7 @@ pub struct App<'a> {
     pub editing_task_id: Option<String>,
     pub search_query: String,
     pub stats: Vec<(String, u64)>,
+    pub show_help: bool,
 }
 
 impl<'a> App<'a> {
@@ -107,6 +109,7 @@ impl<'a> App<'a> {
             editing_task_id: None,
             search_query: String::new(),
             stats,
+            show_help: false,
         })
     }
 
@@ -139,13 +142,33 @@ impl<'a> App<'a> {
         Ok(())
     }
 
+    fn parse_priority(&self, text: &str) -> (String, TaskPriority) {
+        let mut clean_text = text.to_string();
+        let mut priority = TaskPriority::Medium;
+
+        if text.contains("!h") || text.contains("!high") {
+            priority = TaskPriority::High;
+            clean_text = clean_text.replace("!h", "").replace("!high", "");
+        } else if text.contains("!l") || text.contains("!low") {
+            priority = TaskPriority::Low;
+            clean_text = clean_text.replace("!l", "").replace("!low", "");
+        } else if text.contains("!m") || text.contains("!med") {
+            priority = TaskPriority::Medium;
+            clean_text = clean_text.replace("!m", "").replace("!med", "");
+        }
+
+        (clean_text.trim().to_string(), priority)
+    }
+
     pub fn save_task(&mut self) -> Result<()> {
         let lines = self.textarea.lines();
         if lines.is_empty() || lines[0].trim().is_empty() {
             return Ok(());
         }
 
-        let title = lines[0].trim().to_string();
+        let raw_title = lines[0].trim();
+        let (title, priority) = self.parse_priority(raw_title);
+
         let description = if lines.len() > 1 {
             lines[1..].join("\n").trim().to_string()
         } else {
@@ -154,10 +177,12 @@ impl<'a> App<'a> {
 
         if let Some(id) = &self.editing_task_id {
             // Update existing
-            self.db.update_task_content(id, &title, &description)?;
+            self.db
+                .update_task_content(id, &title, &description, priority)?;
         } else {
             // Create new
-            let task = Task::new(title, description, 10);
+            // XP logic: High priority = more XP? Or standardized? Let's keep 10 for now.
+            let task = Task::new(title, description, priority, 10);
             self.db.create_task(&task)?;
         }
 
@@ -182,6 +207,13 @@ impl<'a> App<'a> {
 
                 // Pre-fill text area
                 let mut text = task.title.clone();
+                // Append priority tag so user can see/edit it
+                match task.priority {
+                    TaskPriority::High => text.push_str(" !h"),
+                    TaskPriority::Low => text.push_str(" !l"),
+                    _ => {}
+                }
+
                 if !task.description.is_empty() {
                     text.push('\n');
                     text.push_str(&task.description);

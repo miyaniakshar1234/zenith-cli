@@ -39,24 +39,60 @@ impl FromSql for TaskStatus {
     }
 }
 
+#[derive(Debug, Clone, Serialize, Deserialize, PartialEq)]
+pub enum TaskPriority {
+    Low,
+    Medium,
+    High,
+}
+
+impl fmt::Display for TaskPriority {
+    fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
+        match self {
+            TaskPriority::Low => write!(f, "LOW"),
+            TaskPriority::Medium => write!(f, "MEDIUM"),
+            TaskPriority::High => write!(f, "HIGH"),
+        }
+    }
+}
+
+impl ToSql for TaskPriority {
+    fn to_sql(&self) -> rusqlite::Result<ToSqlOutput<'_>> {
+        Ok(self.to_string().into())
+    }
+}
+
+impl FromSql for TaskPriority {
+    fn column_result(value: ValueRef<'_>) -> FromSqlResult<Self> {
+        String::column_result(value).and_then(|s| match s.as_str() {
+            "LOW" => Ok(TaskPriority::Low),
+            "MEDIUM" => Ok(TaskPriority::Medium),
+            "HIGH" => Ok(TaskPriority::High),
+            _ => Ok(TaskPriority::Medium), // Default fallback
+        })
+    }
+}
+
 #[derive(Debug, Clone, Serialize, Deserialize)]
 pub struct Task {
     pub id: String,
     pub title: String,
     pub description: String,
     pub status: TaskStatus,
+    pub priority: TaskPriority,
     pub xp_reward: i32,
     pub created_at: DateTime<Utc>,
     pub completed_at: Option<DateTime<Utc>>,
 }
 
 impl Task {
-    pub fn new(title: String, description: String, xp: i32) -> Self {
+    pub fn new(title: String, description: String, priority: TaskPriority, xp: i32) -> Self {
         Self {
             id: Uuid::new_v4().to_string(),
             title,
             description,
             status: TaskStatus::Todo,
+            priority,
             xp_reward: xp,
             created_at: Utc::now(),
             completed_at: None,

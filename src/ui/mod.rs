@@ -11,6 +11,7 @@ use ratatui::{
 mod analytics;
 mod dashboard;
 mod focus;
+mod help;
 mod inspector;
 mod kanban;
 pub mod theme;
@@ -51,12 +52,14 @@ pub fn draw(f: &mut Frame, app: &mut App) {
         draw_input_modal(f, app);
     }
 
-    // Note: Inspector is now embedded in Dashboard (Master-Detail),
-    // but we keep the modal inspector logic if needed for other views or deep focus.
-    // For this design, we disable the modal inspector in Dashboard view
-    // because it's shown on the right.
+    // Inspector is embedded in dashboard, but if we wanted it elsewhere:
     if app.is_inspecting && app.current_view != CurrentView::Dashboard {
         inspector::draw(f, app);
+    }
+
+    // Help Overlay
+    if app.show_help {
+        help::draw(f, app);
     }
 }
 
