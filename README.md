@@ -3,6 +3,7 @@
 ![Build Status](https://img.shields.io/github/actions/workflow/status/miyaniakshar1234/zenith-cli/release.yml?style=flat-square&label=Release%20Build)
 ![License](https://img.shields.io/badge/license-MIT-blue?style=flat-square)
 ![Crates.io](https://img.shields.io/crates/v/zenith-cli?style=flat-square)
+![NPM](https://img.shields.io/npm/v/@miyaniakshar/zenith-cli?style=flat-square)
 
 ```text
 ███████╗███████╗███╗   ██╗██╗████████╗██╗  ██╗
@@ -41,7 +42,15 @@ The easiest way to get started. No coding knowledge needed.
     - Windows: Double-click the `.exe` or run from PowerShell.
     - Mac/Linux: Open terminal, `chmod +x zenith-cli`, then `./zenith-cli`.
 
-### Method 2: Via Terminal (For Developers)
+### Method 2: Via NPM (Universal / Restricted Networks) 🌐
+If you have Node.js installed (common in schools/bootcamps) and cannot access GitHub binary downloads:
+
+```bash
+npx @miyaniakshar/zenith-cli
+```
+*This works instantly without administrator privileges and bypasses GitHub download blocks.*
+
+### Method 3: Via Terminal (For Developers)
 If you have Rust/Cargo installed:
 
 ```bash
@@ -53,7 +62,7 @@ cargo install --git https://github.com/miyaniakshar1234/zenith-cli
 ```
 
 ## 🚀 Running the Application
-Once installed via Cargo, simply type:
+Once installed via Cargo or NPM, simply type:
 ```bash
 zenith-cli
 ```
