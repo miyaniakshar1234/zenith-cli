@@ -194,11 +194,6 @@ impl<'a> App<'a> {
         }
     }
 
-    // Legacy wrapper if needed or we update main.rs to call save_task
-    pub fn add_task(&mut self) -> Result<()> {
-        self.save_task()
-    }
-
     pub fn toggle_inspector(&mut self) {
         if self.current_view == CurrentView::Dashboard && !self.tasks.is_empty() {
             self.is_inspecting = !self.is_inspecting;
@@ -418,8 +413,8 @@ impl<'a> App<'a> {
             if let Some(last_tick) = self.focus_state.last_tick {
                 let delta = now.signed_duration_since(last_tick).num_seconds();
                 if delta > 0 {
-                    if self.focus_state.remaining_sec >= delta as i64 {
-                        self.focus_state.remaining_sec -= delta as i64;
+                    if self.focus_state.remaining_sec >= delta {
+                        self.focus_state.remaining_sec -= delta;
                     } else {
                         self.focus_state.remaining_sec = 0;
                         self.focus_state.is_running = false;
