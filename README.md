@@ -30,43 +30,36 @@
 
 ## 📦 Installation
 
-### Method 1: Direct Download (No Rust Required) 🌟
-The easiest way to get started. No coding knowledge needed.
+### Method 1: The "Magical" One-Line Installer ✨ (Recommended)
+Works instantly on any computer. No Rust, No Node, No Downloads folder hunting.
 
-1.  Go to the **[Releases Page](https://github.com/miyaniakshar1234/zenith-cli/releases)**.
-2.  Download the file for your system:
-    - **Windows**: `zenith-cli-windows-amd64.exe`
-    - **Mac**: `zenith-cli-macos-amd64`
-    - **Linux**: `zenith-cli-linux-amd64`
-3.  **Run it!**
-    - Windows: Double-click the `.exe` or run from PowerShell.
-    - Mac/Linux: Open terminal, `chmod +x zenith-cli`, then `./zenith-cli`.
-
-### Method 2: Via NPM (Universal / Restricted Networks) 🌐
-If you have Node.js installed (common in schools/bootcamps) and cannot access GitHub binary downloads:
-
+**Linux / macOS:**
 ```bash
-npx @miyaniakshar/zenith-cli
+curl -fsSL https://raw.githubusercontent.com/miyaniakshar1234/zenith-cli/main/install.sh | bash
 ```
-*This works instantly without administrator privileges and bypasses GitHub download blocks.*
+
+**Windows (PowerShell):**
+```powershell
+iwr https://raw.githubusercontent.com/miyaniakshar1234/zenith-cli/main/install.ps1 -useb | iex
+```
+
+### Method 2: Direct Download (Manual)
+1. Go to the **[Releases Page](https://github.com/miyaniakshar1234/zenith-cli/releases)**.
+2. Download the binary for your OS.
+3. Run it.
 
 ### Method 3: Via Terminal (For Developers)
-If you have Rust/Cargo installed:
-
 ```bash
 cargo install zenith-cli
-```
-*Or build from source:*
-```bash
-cargo install --git https://github.com/miyaniakshar1234/zenith-cli
+# OR
+npm install -g @miyaniakshar/zenith-cli
 ```
 
 ## 🚀 Running the Application
-Once installed via Cargo or NPM, simply type:
+Simply type:
 ```bash
 zenith-cli
 ```
-If you downloaded the binary, navigate to your download folder and run it directly (`.\zenith-cli.exe`).
 
 ## 🎮 Controls
 
