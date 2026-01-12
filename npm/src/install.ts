@@ -69,38 +69,6 @@ function downloadFile(url: string, dest: string): Promise<void> {
         });
     });
 }
-                downloadFile(response.headers.location, dest).then(resolve).catch(reject);
-                return;
-            }
-            
-            if (response.statusCode !== 200) {
-                reject(new Error(`Failed to download: ${response.statusCode}`));
-                return;
-            }
-
-            const file = fs.createWriteStream(dest);
-            response.pipe(file);
-            file.on('finish', () => {
-                file.close();
-                resolve();
-            });
-            file.on('error', (err) => {
-                fs.unlink(dest, () => {});
-                reject(err);
-            });
-        });
-
-        request.on('error', (err) => {
-            fs.unlink(dest, () => {});
-            reject(err);
-        });
-
-        request.on('timeout', () => {
-            request.destroy();
-            reject(new Error("Download timed out"));
-        });
-    });
-}
 
 async function install() {
     try {
