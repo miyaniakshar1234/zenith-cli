@@ -132,6 +132,14 @@ impl Database {
         Ok(())
     }
 
+    pub fn update_task_content(&self, id: &str, title: &str, description: &str) -> Result<()> {
+        self.conn.execute(
+            "UPDATE tasks SET title = ?1, description = ?2 WHERE id = ?3",
+            params![title, description, id],
+        )?;
+        Ok(())
+    }
+
     pub fn get_user_profile(&self) -> Result<UserProfile> {
         let mut stmt = self.conn.prepare(
             "SELECT id, level, current_xp, next_level_xp FROM user_profile WHERE id = 1",

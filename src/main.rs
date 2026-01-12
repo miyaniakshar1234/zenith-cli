@@ -70,7 +70,16 @@ fn run_app<B: ratatui::backend::Backend>(
                     InputMode::Normal => match key.code {
                         KeyCode::Char('q') => return Ok(()),
                         KeyCode::Tab => app.cycle_view(),
-                        KeyCode::Char('n') => app.input_mode = InputMode::Editing,
+                        KeyCode::Char('n') => {
+                            app.editing_task_id = None;
+                            app.textarea = tui_textarea::TextArea::default();
+                            app.textarea
+                                .set_placeholder_text("Title (Line 1)\nDescription (Line 2+)...");
+                            app.input_mode = InputMode::Editing;
+                        }
+                        KeyCode::Char('e') => {
+                            app.start_editing();
+                        }
 
                         // Universal Navigation
                         KeyCode::Char('j') | KeyCode::Down => app.next_item(),
@@ -95,6 +104,9 @@ fn run_app<B: ratatui::backend::Backend>(
                                 eprintln!("Error deleting task: {}", e);
                             }
                         }
+                        KeyCode::Char('/') => {
+                            app.input_mode = InputMode::Search;
+                        }
                         KeyCode::Enter => {
                             app.toggle_inspector();
                         }
@@ -108,10 +120,16 @@ fn run_app<B: ratatui::backend::Backend>(
                     InputMode::Editing => match key.code {
                         KeyCode::Esc => {
                             app.input_mode = InputMode::Normal;
+                            app.editing_task_id = None;
                         }
                         KeyCode::Enter => {
-                            if let Err(e) = app.add_task() {
-                                eprintln!("Error adding task: {}", e);
+                            // If Shift+Enter, add newline (standard text editor behavior)
+                            // But crossterm might capture enter.
+                            // For now, let's keep Enter = Save. To add lines, maybe user pastes?
+                            // Or we check modifiers. tui-textarea handles newlines if we pass them.
+                            // Let's stick to Enter = Save for CLI speed.
+                            if let Err(e) = app.save_task() {
+                                eprintln!("Error saving task: {}", e);
                             }
                             app.input_mode = InputMode::Normal;
                         }
@@ -119,6 +137,20 @@ fn run_app<B: ratatui::backend::Backend>(
                             // DELEGATE TO TUI-TEXTAREA
                             app.textarea.input(key);
                         }
+                    },
+                    InputMode::Search => match key.code {
+                        KeyCode::Enter | KeyCode::Esc => {
+                            app.input_mode = InputMode::Normal;
+                        }
+                        KeyCode::Backspace => {
+                            app.search_query.pop();
+                            app.refresh_state().unwrap();
+                        }
+                        KeyCode::Char(c) => {
+                            app.search_query.push(c);
+                            app.refresh_state().unwrap();
+                        }
+                        _ => {}
                     },
                 }
             }

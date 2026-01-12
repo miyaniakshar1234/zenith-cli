@@ -128,6 +128,14 @@ fn draw_header(f: &mut Frame, app: &App, area: Rect) {
                 .fg(NORD_PRO.fg)
                 .add_modifier(Modifier::BOLD),
         ),
+        if !app.search_query.is_empty() || app.input_mode == InputMode::Search {
+            Span::styled(
+                format!("  {}_", app.search_query),
+                Style::default().fg(NORD_PRO.warning),
+            )
+        } else {
+            Span::raw("")
+        },
     ]))
     .block(
         Block::default()
@@ -158,10 +166,11 @@ fn draw_status_bar(f: &mut Frame, app: &App, area: Rect) {
     let (mode_str, mode_color) = match app.input_mode {
         InputMode::Normal => (" NORMAL ", NORD_PRO.accent),
         InputMode::Editing => (" INSERT ", NORD_PRO.success),
+        InputMode::Search => (" SEARCH ", NORD_PRO.warning),
     };
 
     let hints = match app.current_view {
-        CurrentView::Dashboard => "n: New • d: Delete • SPC: Complete • j/k: Nav",
+        CurrentView::Dashboard => "n: New • e: Edit • d: Delete • SPC: Complete • Enter: Inspect",
         CurrentView::Kanban => "h/l: Col • j/k: Task",
         CurrentView::Focus => "t: Start/Stop • r: Reset",
     };
@@ -186,12 +195,18 @@ fn draw_input_modal(f: &mut Frame, app: &mut App) {
     let area = centered_rect(50, 20, f.area());
     f.render_widget(Clear, area);
 
+    let title = if app.editing_task_id.is_some() {
+        " EDIT TASK "
+    } else {
+        " NEW TASK "
+    };
+
     app.textarea.set_block(
         Block::default()
             .borders(Borders::ALL)
             .border_type(BorderType::Thick)
             .border_style(Style::default().fg(NORD_PRO.accent))
-            .title(" NEW TASK "),
+            .title(title),
     );
     app.textarea.set_style(Style::default().fg(NORD_PRO.fg));
     app.textarea

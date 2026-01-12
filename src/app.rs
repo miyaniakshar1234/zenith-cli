@@ -11,6 +11,7 @@ use tui_textarea::TextArea;
 pub enum InputMode {
     Normal,
     Editing,
+    Search,
 }
 
 #[derive(PartialEq, Clone, Copy, Debug)]
@@ -72,6 +73,8 @@ pub struct App<'a> {
     pub focus_state: FocusState,
     pub kanban_state: KanbanState,
     pub is_inspecting: bool,
+    pub editing_task_id: Option<String>,
+    pub search_query: String,
 }
 
 impl<'a> App<'a> {
@@ -98,22 +101,40 @@ impl<'a> App<'a> {
             focus_state: FocusState::default(),
             kanban_state: KanbanState::default(),
             is_inspecting: false,
+            editing_task_id: None,
+            search_query: String::new(),
         })
     }
 
     pub fn refresh_state(&mut self) -> Result<()> {
-        self.tasks = self.db.get_all_tasks()?;
+        let all_tasks = self.db.get_all_tasks()?;
+
+        if self.search_query.is_empty() {
+            self.tasks = all_tasks;
+        } else {
+            let q = self.search_query.to_lowercase();
+            self.tasks = all_tasks
+                .into_iter()
+                .filter(|t| {
+                    t.title.to_lowercase().contains(&q) || t.description.to_lowercase().contains(&q)
+                })
+                .collect();
+        }
+
         self.user_profile = self.db.get_user_profile()?;
 
         // Ensure selections remain valid
         if self.list_state.selected().is_none() && !self.tasks.is_empty() {
             self.list_state.select(Some(0));
+        } else if self.list_state.selected().unwrap_or(0) >= self.tasks.len() {
+            self.list_state
+                .select(Some(self.tasks.len().saturating_sub(1)));
         }
 
         Ok(())
     }
 
-    pub fn add_task(&mut self) -> Result<()> {
+    pub fn save_task(&mut self) -> Result<()> {
         let lines = self.textarea.lines();
         if lines.is_empty() || lines[0].trim().is_empty() {
             return Ok(());
@@ -126,16 +147,50 @@ impl<'a> App<'a> {
             String::new()
         };
 
-        let task = Task::new(title, description, 10);
-        self.db.create_task(&task)?;
+        if let Some(id) = &self.editing_task_id {
+            // Update existing
+            self.db.update_task_content(id, &title, &description)?;
+        } else {
+            // Create new
+            let task = Task::new(title, description, 10);
+            self.db.create_task(&task)?;
+        }
 
-        // Reset textarea
+        // Reset
+        self.editing_task_id = None;
         self.textarea = TextArea::default();
         self.textarea
             .set_placeholder_text("Title (Line 1)\nDescription (Line 2+)...");
 
         self.refresh_state()?;
         Ok(())
+    }
+
+    pub fn start_editing(&mut self) {
+        if self.current_view != CurrentView::Dashboard {
+            return;
+        }
+
+        if let Some(i) = self.list_state.selected() {
+            if let Some(task) = self.tasks.get(i) {
+                self.editing_task_id = Some(task.id.clone());
+
+                // Pre-fill text area
+                let mut text = task.title.clone();
+                if !task.description.is_empty() {
+                    text.push('\n');
+                    text.push_str(&task.description);
+                }
+
+                self.textarea = TextArea::new(text.lines().map(|s| s.to_string()).collect());
+                self.input_mode = InputMode::Editing;
+            }
+        }
+    }
+
+    // Legacy wrapper if needed or we update main.rs to call save_task
+    pub fn add_task(&mut self) -> Result<()> {
+        self.save_task()
     }
 
     pub fn toggle_inspector(&mut self) {
