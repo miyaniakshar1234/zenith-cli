@@ -1,6 +1,6 @@
 [package]
 name = "zenith-cli"
-version = "1.2.1"
+version = "1.2.2"
 edition = "2021"
 authors = ["MiyaniAkshar1234"]
 description = "A high-performance, cyberpunk-styled CLI Task Manager & RPG."
