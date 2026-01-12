@@ -19,6 +19,7 @@ pub enum CurrentView {
     Dashboard,
     Kanban,
     Focus,
+    Analytics,
 }
 
 pub struct FocusState {
@@ -75,6 +76,7 @@ pub struct App<'a> {
     pub is_inspecting: bool,
     pub editing_task_id: Option<String>,
     pub search_query: String,
+    pub stats: Vec<(String, u64)>,
 }
 
 impl<'a> App<'a> {
@@ -82,6 +84,8 @@ impl<'a> App<'a> {
         let db = Database::init()?;
         let tasks = db.get_all_tasks()?;
         let user_profile = db.get_user_profile()?;
+        let stats = db.get_weekly_stats()?;
+
         let mut list_state = ListState::default();
         if !tasks.is_empty() {
             list_state.select(Some(0));
@@ -103,6 +107,7 @@ impl<'a> App<'a> {
             is_inspecting: false,
             editing_task_id: None,
             search_query: String::new(),
+            stats,
         })
     }
 
@@ -122,6 +127,7 @@ impl<'a> App<'a> {
         }
 
         self.user_profile = self.db.get_user_profile()?;
+        self.stats = self.db.get_weekly_stats()?;
 
         // Ensure selections remain valid
         if self.list_state.selected().is_none() && !self.tasks.is_empty() {
@@ -204,7 +210,7 @@ impl<'a> App<'a> {
         match self.current_view {
             CurrentView::Dashboard => self.next_dashboard_task(),
             CurrentView::Kanban => self.next_kanban_item(),
-            CurrentView::Focus => {} // No list in Focus mode
+            CurrentView::Focus | CurrentView::Analytics => {}
         }
     }
 
@@ -212,7 +218,7 @@ impl<'a> App<'a> {
         match self.current_view {
             CurrentView::Dashboard => self.previous_dashboard_task(),
             CurrentView::Kanban => self.previous_kanban_item(),
-            CurrentView::Focus => {}
+            CurrentView::Focus | CurrentView::Analytics => {}
         }
     }
 
@@ -334,7 +340,8 @@ impl<'a> App<'a> {
         self.current_view = match self.current_view {
             CurrentView::Dashboard => CurrentView::Kanban,
             CurrentView::Kanban => CurrentView::Focus,
-            CurrentView::Focus => CurrentView::Dashboard,
+            CurrentView::Focus => CurrentView::Analytics,
+            CurrentView::Analytics => CurrentView::Dashboard,
         };
     }
 

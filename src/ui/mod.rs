@@ -8,6 +8,7 @@ use ratatui::{
     Frame,
 };
 
+mod analytics;
 mod dashboard;
 mod focus;
 mod inspector;
@@ -50,6 +51,7 @@ pub fn draw(f: &mut Frame, app: &mut App) {
         CurrentView::Dashboard => dashboard::draw(f, app, content_layout[1]),
         CurrentView::Kanban => kanban::draw(f, app, content_layout[1]),
         CurrentView::Focus => focus::draw(f, app, content_layout[1]),
+        CurrentView::Analytics => analytics::draw(f, app, content_layout[1]),
     }
 
     draw_status_bar(f, app, content_layout[2]);
@@ -70,12 +72,14 @@ fn draw_sidebar(f: &mut Frame, app: &App, area: Rect) {
         ListItem::new("   Dashboard"),
         ListItem::new("   Kanban Board"),
         ListItem::new("   Focus Timer"),
+        ListItem::new("   Analytics"),
     ];
 
     let current_idx = match app.current_view {
         CurrentView::Dashboard => 0,
         CurrentView::Kanban => 1,
         CurrentView::Focus => 2,
+        CurrentView::Analytics => 3,
     };
 
     let nav = List::new(items)
@@ -111,6 +115,7 @@ fn draw_header(f: &mut Frame, app: &App, area: Rect) {
         CurrentView::Dashboard => "DASHBOARD",
         CurrentView::Kanban => "WORKFLOW / KANBAN",
         CurrentView::Focus => "DEEP WORK / FOCUS",
+        CurrentView::Analytics => "STATS / ANALYTICS",
     };
 
     let title = Paragraph::new(Line::from(vec![
@@ -173,6 +178,7 @@ fn draw_status_bar(f: &mut Frame, app: &App, area: Rect) {
         CurrentView::Dashboard => "n: New • e: Edit • d: Delete • SPC: Complete • Enter: Inspect",
         CurrentView::Kanban => "h/l: Col • j/k: Task",
         CurrentView::Focus => "t: Start/Stop • r: Reset",
+        CurrentView::Analytics => "Visual Stats",
     };
 
     let status = Paragraph::new(Line::from(vec![

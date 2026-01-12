@@ -140,6 +140,26 @@ impl Database {
         Ok(())
     }
 
+    pub fn get_weekly_stats(&self) -> Result<Vec<(String, u64)>> {
+        // SQLite trick to group by date (YYYY-MM-DD) from ISO8601 string
+        let mut stmt = self.conn.prepare(
+            "SELECT substr(completed_at, 1, 10) as day, COUNT(*) 
+             FROM tasks 
+             WHERE status = 'Done' AND completed_at IS NOT NULL
+             GROUP BY day 
+             ORDER BY day DESC 
+             LIMIT 7",
+        )?;
+
+        let rows = stmt.query_map([], |row| Ok((row.get(0)?, row.get(1)?)))?;
+
+        let mut stats = Vec::new();
+        for r in rows {
+            stats.push(r?);
+        }
+        Ok(stats)
+    }
+
     pub fn get_user_profile(&self) -> Result<UserProfile> {
         let mut stmt = self.conn.prepare(
             "SELECT id, level, current_xp, next_level_xp FROM user_profile WHERE id = 1",
