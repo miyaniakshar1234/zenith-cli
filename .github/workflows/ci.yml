@@ -1,0 +1,29 @@
+name: Zenith CI Pipeline
+
+on:
+  push:
+    branches: [ "main" ]
+  pull_request:
+    branches: [ "main" ]
+
+env:
+  CARGO_TERM_COLOR: always
+
+jobs:
+  quality-gate:
+    name: 🛡️ Quality Gate
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - name: 🦀 Install Rust
+        uses: dtolnay/rust-toolchain@stable
+        with:
+          components: clippy, rustfmt
+      - name: 🔍 Check Formatting
+        run: cargo fmt -- --check
+      - name: 🧐 Linting (Clippy)
+        run: cargo clippy -- -D warnings
+      - name: 🏗️ Build
+        run: cargo build --verbose
+      - name: 🧪 Run Tests
+        run: cargo test --verbose
