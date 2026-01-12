@@ -70,3 +70,13 @@ cargo install zenith-cli
 ### Focus View
 - `t`: Start / Pause Timer.
 - `r`: Reset Timer.
+
+## 👨‍💻 Created By
+
+**Miyani Akshar**
+*Systems Engineer & Open Source Enthusiast*
+
+- **GitHub**: [@miyaniakshar1234](https://github.com/miyaniakshar1234)
+- **Crates.io**: [zenith-cli](https://crates.io/crates/zenith-cli)
+
+Built with ❤️ in **Rust** to help developers stay in the flow.
