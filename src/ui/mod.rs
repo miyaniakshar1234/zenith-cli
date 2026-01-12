@@ -96,7 +96,7 @@ fn draw_tabs(f: &mut Frame, app: &App, area: Rect) {
     f.render_widget(tabs, area);
 }
 
-fn draw_footer(f: &mut Frame, app: &App, area: Rect) {
+fn draw_footer(f: &mut Frame, app: &mut App, area: Rect) {
     let input_block = Block::default().borders(Borders::ALL).title("Input");
 
     match app.input_mode {
@@ -115,10 +115,14 @@ fn draw_footer(f: &mut Frame, app: &App, area: Rect) {
             f.render_widget(p, area);
         }
         InputMode::Editing => {
-            let input = Paragraph::new(app.input_buffer.as_str())
-                .style(Style::default().fg(Color::Yellow))
-                .block(input_block.title("Create New Task (Enter to Save, Esc to Cancel)"));
-            f.render_widget(input, area);
+            // RENDER TUI-TEXTAREA
+            app.textarea.set_block(
+                Block::default()
+                    .borders(Borders::ALL)
+                    .title("Create New Task (Enter to Save, Esc to Cancel)")
+                    .style(Style::default().fg(Color::Yellow)),
+            );
+            f.render_widget(&app.textarea, area);
         }
     }
 }

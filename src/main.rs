@@ -1,6 +1,6 @@
 use color_eyre::eyre::Result;
 use crossterm::{
-    event::{self, DisableMouseCapture, EnableMouseCapture, Event, KeyCode},
+    event::{self, DisableMouseCapture, EnableMouseCapture, Event, KeyCode, KeyEventKind},
     execute,
     terminal::{disable_raw_mode, enable_raw_mode, EnterAlternateScreen, LeaveAlternateScreen},
 };
@@ -60,6 +60,12 @@ fn run_app<B: ratatui::backend::Backend>(
 
         if event::poll(Duration::from_millis(250))? {
             if let Event::Key(key) = event::read()? {
+                // IMPORTANT: FIX DOUBLE TYPING BUG
+                // Only process KeyPress events, ignore Release/Repeat
+                if key.kind != KeyEventKind::Press {
+                    continue;
+                }
+
                 match app.input_mode {
                     InputMode::Normal => match key.code {
                         KeyCode::Char('q') => return Ok(()),
@@ -92,23 +98,19 @@ fn run_app<B: ratatui::backend::Backend>(
                         _ => {}
                     },
                     InputMode::Editing => match key.code {
+                        KeyCode::Esc => {
+                            app.input_mode = InputMode::Normal;
+                        }
                         KeyCode::Enter => {
                             if let Err(e) = app.add_task() {
                                 eprintln!("Error adding task: {}", e);
                             }
                             app.input_mode = InputMode::Normal;
                         }
-                        KeyCode::Char(c) => {
-                            app.input_buffer.push(c);
+                        _ => {
+                            // DELEGATE TO TUI-TEXTAREA
+                            app.textarea.input(key);
                         }
-                        KeyCode::Backspace => {
-                            app.input_buffer.pop();
-                        }
-                        KeyCode::Esc => {
-                            app.input_mode = InputMode::Normal;
-                            app.input_buffer.clear();
-                        }
-                        _ => {}
                     },
                 }
             }

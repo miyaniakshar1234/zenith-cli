@@ -5,6 +5,7 @@ use crate::db::{
 use chrono::{DateTime, Utc};
 use color_eyre::eyre::Result;
 use ratatui::widgets::ListState;
+use tui_textarea::TextArea;
 
 #[derive(PartialEq)]
 pub enum InputMode {
@@ -60,19 +61,19 @@ impl Default for KanbanState {
     }
 }
 
-pub struct App {
+pub struct App<'a> {
     pub db: Database,
     pub tasks: Vec<Task>,
     pub user_profile: UserProfile,
     pub input_mode: InputMode,
-    pub input_buffer: String,
+    pub textarea: TextArea<'a>,
     pub list_state: ListState,
     pub current_view: CurrentView,
     pub focus_state: FocusState,
     pub kanban_state: KanbanState,
 }
 
-impl App {
+impl<'a> App<'a> {
     pub fn new() -> Result<Self> {
         let db = Database::init()?;
         let tasks = db.get_all_tasks()?;
@@ -82,12 +83,15 @@ impl App {
             list_state.select(Some(0));
         }
 
+        let mut textarea = TextArea::default();
+        textarea.set_placeholder_text("Type task description...");
+
         Ok(Self {
             db,
             tasks,
             user_profile,
             input_mode: InputMode::Normal,
-            input_buffer: String::new(),
+            textarea,
             list_state,
             current_view: CurrentView::Dashboard,
             focus_state: FocusState::default(),
@@ -108,12 +112,21 @@ impl App {
     }
 
     pub fn add_task(&mut self) -> Result<()> {
-        if self.input_buffer.trim().is_empty() {
+        let content = self.textarea.lines().join("\n");
+        if content.trim().is_empty() {
             return Ok(());
         }
-        let task = Task::new(self.input_buffer.clone(), String::new(), 10);
+        // Split title and description? For now, just title
+        let title = content.lines().next().unwrap_or("").to_string();
+
+        let task = Task::new(title, String::new(), 10);
         self.db.create_task(&task)?;
-        self.input_buffer.clear();
+
+        // Reset textarea
+        self.textarea = TextArea::default();
+        self.textarea
+            .set_placeholder_text("Type task description...");
+
         self.refresh_state()?;
         Ok(())
     }
