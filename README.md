@@ -1,6 +1,6 @@
 # Zenith CLI Task Manager v1.1.0 🚀
 
-![Build Status](https://img.shields.io/github/actions/workflow/status/miyaniakshar1234/zenith-cli/ci.yml?style=flat-square&label=Build)
+![Build Status](https://img.shields.io/github/actions/workflow/status/miyaniakshar1234/zenith-cli/release.yml?style=flat-square&label=Release%20Build)
 ![License](https://img.shields.io/badge/license-MIT-blue?style=flat-square)
 ![Rust](https://img.shields.io/badge/Rust-v1.8%2B-orange?style=flat-square)
 
@@ -25,12 +25,30 @@
 - [x] **Focus Mode**: Distraction-free Pomodoro timer.
 - [x] **Analytics**: Visual productivity velocity charts.
 - [x] **RPG System**: Level up as you complete tasks.
+- [x] **Theme Switcher**: Press `T` to toggle themes (Horizon, Nebula, Nord, Cyberpunk).
+
+## 📦 Installation
+
+### Option 1: Direct Download (Recommended)
+Go to the **[Releases Page](https://github.com/miyaniakshar1234/zenith-cli/releases)** and download the binary for your system (Windows, Linux, or macOS).
+- **Windows**: Download `zenith-cli-windows-amd64.exe`
+- **Linux**: Download `zenith-cli-linux-amd64`
+- **Mac**: Download `zenith-cli-macos-amd64`
+
+### Option 2: Build from Source
+If you have Rust installed:
+```bash
+git clone https://github.com/miyaniakshar1234/zenith-cli
+cd zenith-cli
+cargo install --path .
+```
 
 ## 🎮 Controls
 
 ### Global
 - `TAB`: Switch Views (Dashboard -> Kanban -> Focus -> Analytics).
 - `?`: Toggle **Command Palette** (Help).
+- `T`: Switch Theme.
 - `q` / `Ctrl+C`: Quit application.
 
 ### Dashboard View
@@ -51,18 +69,3 @@
 ### Focus View
 - `t`: Start / Pause Timer.
 - `r`: Reset Timer.
-
-## 🛠️ Tech Stack
-
-- **Core**: Rust 🦀 + SQLite
-- **UI**: Ratatui + Crossterm
-- **Input**: Tui-Textarea
-- **Architecture**: MVVM + Domain Driven Design
-
-## 📦 Installation
-
-```bash
-git clone https://github.com/miyaniakshar1234/zenith-cli
-cd zenith-cli
-cargo run --release
-```
