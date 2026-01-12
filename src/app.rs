@@ -124,6 +124,7 @@ pub struct App<'a> {
     pub stats: Vec<(String, u64)>,
     pub show_help: bool,
     pub current_theme: ThemeType,
+    pub show_quit_modal: bool,
 }
 
 impl<'a> App<'a> {
@@ -154,6 +155,7 @@ impl<'a> App<'a> {
             stats,
             show_help: false,
             current_theme: ThemeType::Horizon,
+            show_quit_modal: false,
         })
     }
 

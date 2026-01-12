@@ -15,6 +15,7 @@ mod form;
 mod help;
 mod inspector;
 mod kanban;
+mod quit;
 mod splash;
 pub mod theme;
 
@@ -58,6 +59,11 @@ pub fn draw(f: &mut Frame, app: &mut App) {
     // Help Overlay
     if app.show_help {
         help::draw(f, app);
+    }
+
+    // Quit Modal (Highest Priority)
+    if app.show_quit_modal {
+        quit::draw_quit_modal(f, app);
     }
 }
 
