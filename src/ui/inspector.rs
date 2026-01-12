@@ -1,5 +1,5 @@
 use crate::app::App;
-use crate::ui::theme::HORIZON;
+use crate::ui::theme::get_theme;
 use ratatui::{
     layout::{Constraint, Direction, Layout, Rect},
     style::{Modifier, Style},
@@ -8,7 +8,10 @@ use ratatui::{
     Frame,
 };
 
+#[allow(dead_code)]
 pub fn draw(f: &mut Frame, app: &App) {
+    let theme = get_theme(app.current_theme);
+
     let area = centered_rect(60, 60, f.area());
     f.render_widget(Clear, area);
 
@@ -27,8 +30,8 @@ pub fn draw(f: &mut Frame, app: &App) {
         .borders(Borders::ALL)
         .border_type(BorderType::Double)
         .title(" INSPECTOR ")
-        .style(Style::default().bg(HORIZON.bg).fg(HORIZON.fg))
-        .border_style(Style::default().fg(HORIZON.accent));
+        .style(Style::default().bg(theme.bg).fg(theme.fg))
+        .border_style(Style::default().fg(theme.accent));
 
     let inner_area = block.inner(area);
     f.render_widget(block, area);
@@ -52,7 +55,7 @@ pub fn draw(f: &mut Frame, app: &App) {
         &task.title,
         Style::default()
             .add_modifier(Modifier::BOLD)
-            .fg(HORIZON.accent),
+            .fg(theme.accent),
     ));
     f.render_widget(title, chunks[0]);
 
@@ -64,7 +67,7 @@ pub fn draw(f: &mut Frame, app: &App) {
         task.xp_reward,
         task.created_at.format("%Y-%m-%d %H:%M")
     );
-    let metadata = Paragraph::new(Span::styled(meta, Style::default().fg(HORIZON.dimmed)));
+    let metadata = Paragraph::new(Span::styled(meta, Style::default().fg(theme.dimmed)));
     f.render_widget(metadata, chunks[2]);
 
     // 3. Description
@@ -76,11 +79,12 @@ pub fn draw(f: &mut Frame, app: &App) {
 
     let description = Paragraph::new(desc_text)
         .wrap(Wrap { trim: true })
-        .style(Style::default().fg(HORIZON.fg));
+        .style(Style::default().fg(theme.fg));
 
     f.render_widget(description, chunks[4]);
 }
 
+#[allow(dead_code)]
 fn centered_rect(percent_x: u16, percent_y: u16, r: Rect) -> Rect {
     let popup_layout = Layout::default()
         .direction(Direction::Vertical)
